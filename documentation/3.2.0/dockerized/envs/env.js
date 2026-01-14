@@ -1,0 +1,24 @@
+window["env"] = {
+	production: true,
+	name: 'prod environment',
+	staging: false,
+	dev: false,
+	baseUrl: 'http://localhost:3569',
+	sqliteDBName: 'mentoring.db',
+	deepLinkUrl: 'https://mentored.shikshalokam.org',
+	privacyPolicyUrl: 'https://shikshalokam.org/mentoring/privacy-policy',
+	termsOfServiceUrl: 'https://shikshalokam.org/mentoring/term-of-use',
+        recaptchaSiteKey: "",
+	recaptchaSiteKeyOld: "6LfWEKYpAAAAACxKbR7H42o3BwbJkJA06vIM_6Ea",
+	restictedPages: [],
+	unauthorizedRedirectUrl:"/auth/login",
+	supportEmail: 'example@org.com',
+	password: {
+		minLength: 10,
+		rejectPattern: '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#%$&()\\-`.+,/]).{10,}$',
+		errorMessage: 'Password should contain at least one uppercase letter, one number and one special character.',
+	},
+	chatBaseUrl: 'http://localhost:3123.com', 
+    chatWebSocketUrl: 'wss://localhost:3123/websocket'
+
+  };
