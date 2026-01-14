@@ -1731,16 +1731,18 @@ module.exports = class MenteesHelper {
 				})
 			)
 
-			// Step 5: Process entity types (reuse organizationIds) with error handling
+			// Step 5: Process entity types to add value/label pairs for designation, area_of_expertise, etc.
 			if (extensionDetails.data.length > 0) {
 				try {
+					// Extract unique organization codes from the data
+					const organizationCodes = uniqueOrgs.map((org) => org.organization_code).filter(Boolean)
 					const processedData = await entityTypeService.processEntityTypesToAddValueLabels(
 						extensionDetails.data,
-						organizationIds,
+						organizationCodes,
 						userExtensionModelName,
-						'organization_id',
+						'organization_code',
 						[],
-						[tenantCode] // Pass tenantCode to the entity processing service
+						[tenantCode]
 					)
 					if (Array.isArray(processedData)) {
 						extensionDetails.data = processedData
