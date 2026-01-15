@@ -844,41 +844,57 @@ module.exports = class AdminService {
 	}
 	static async triggerPeriodicViewRefreshInternal(modelName, tenantCode) {
 		try {
-			if (!modelName || !tenantCode) {
+			if (!tenantCode) {
 				return responses.failureResponse({
 					statusCode: httpStatusCode.bad_request,
-					message: 'MODEL_NAME_AND_TENANT_CODE_REQUIRED',
+					message: 'TENANT_CODE_REQUIRED',
 					responseCode: 'CLIENT_ERROR',
 				})
 			}
 
-			const result = await adminService.refreshMaterializedView(modelName, tenantCode)
+			// If modelName is provided, refresh specific model; otherwise refresh all models for the tenant
+			if (modelName) {
+				const result = await adminService.refreshMaterializedView(modelName, tenantCode)
 
-			if (result && result.success) {
-				if (result.skipped) {
-					console.log(
-						`⏭️  Materialized view refresh skipped for ${modelName}, tenant: ${tenantCode} - refresh already in progress`
-					)
+				if (result && result.success) {
+					if (result.skipped) {
+						console.log(
+							`⏭️  Materialized view refresh skipped for ${modelName}, tenant: ${tenantCode} - refresh already in progress`
+						)
+					} else {
+						console.log(
+							`✅ Materialized view refreshed successfully for ${modelName}, tenant: ${tenantCode}`
+						)
+					}
 				} else {
-					console.log(`✅ Materialized view refreshed successfully for ${modelName}, tenant: ${tenantCode}`)
+					console.warn(
+						`⚠️  Materialized view refresh failed for ${modelName}, tenant: ${tenantCode}:`,
+						result?.message || 'Unknown error'
+					)
 				}
-			} else {
-				console.warn(
-					`⚠️  Materialized view refresh failed for ${modelName}, tenant: ${tenantCode}:`,
-					result?.message || 'Unknown error'
-				)
-			}
 
-			return responses.successResponse({
-				statusCode: httpStatusCode.ok,
-				message: 'MATERIALIZED_VIEW_REFRESH_INITIATED_SUCCESSFULLY',
-				result: result,
-				tenantCode: tenantCode,
-				modelName: modelName,
-			})
+				return responses.successResponse({
+					statusCode: httpStatusCode.ok,
+					message: 'MATERIALIZED_VIEW_REFRESH_INITIATED_SUCCESSFULLY',
+					result: result,
+					tenantCode: tenantCode,
+					modelName: modelName,
+				})
+			} else {
+				// No modelName provided - refresh all models for this tenant
+				const result = await adminService.triggerPeriodicViewRefresh(tenantCode)
+				return responses.successResponse({
+					statusCode: httpStatusCode.ok,
+					message: 'MATERIALIZED_VIEW_REFRESH_INITIATED_SUCCESSFULLY',
+					result: result || { message: 'Refresh initiated for all models' },
+					tenantCode: tenantCode,
+				})
+			}
 		} catch (error) {
 			console.error(
-				`❌ Error in triggerPeriodicViewRefreshInternal for ${modelName}, tenant ${tenantCode}:`,
+				`❌ Error in triggerPeriodicViewRefreshInternal for ${
+					modelName || 'all models'
+				}, tenant ${tenantCode}:`,
 				error
 			)
 			return responses.failureResponse({
