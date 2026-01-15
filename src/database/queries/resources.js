@@ -1,4 +1,5 @@
 const Resources = require('../models/index').Resources
+const Session = require('../models/index').Session
 
 module.exports = class ResourcessData {
 	static async bulkCreate(data, tenantCode) {
@@ -91,7 +92,6 @@ module.exports = class ResourcessData {
 			console.log(`✅ [DELETE RESOURCE] Resource found - id: ${resource.id}, session_id: ${resource.session_id}`)
 
 			// Validate that the session exists and belongs to the same tenant
-			const Session = Resources.sequelize.models.Sessions
 			const session = await Session.findOne({
 				where: { id: resource.session_id, tenant_code: tenantCode },
 				attributes: ['id'],
