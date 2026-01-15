@@ -87,21 +87,40 @@ module.exports = class admin {
 	}
 	async triggerPeriodicViewRefreshInternal(req) {
 		try {
-			// Log all query parameters, body, headers, and URL for debugging
+			// Log all query parameters, body, path params, headers, and URL for debugging
 			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request method:`, req.method)
 			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request query params:`, JSON.stringify(req.query))
 			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request body:`, JSON.stringify(req.body))
+			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request params:`, JSON.stringify(req.params))
 			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request URL:`, req.url)
 			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request originalUrl:`, req.originalUrl)
 
-			// Get tenant_code and model_name from query params (for GET requests) or body (for POST requests from scheduler)
-			const tenantCode = req.query.tenant_code || req.body?.tenant_code
-			const modelName = req.query.model_name || req.body?.model_name
+			let tenantCode = null
+			let modelName = null
+
+			// Check if tenant_code and model_name are encoded in path parameter (id)
+			// Format: {tenantCode|modelName}
+			if (req.params.id) {
+				const parts = req.params.id.split('|')
+				if (parts.length === 2) {
+					tenantCode = decodeURIComponent(parts[0])
+					modelName = decodeURIComponent(parts[1])
+					console.log(
+						`📋 [TRIGGER PERIODIC VIEW REFRESH] Extracted from path param: tenant=${tenantCode}, model=${modelName}`
+					)
+				}
+			}
+
+			// Fallback to query params (for manual GET requests) or body (for POST requests)
+			if (!tenantCode) {
+				tenantCode = req.query.tenant_code || req.body?.tenant_code
+				modelName = req.query.model_name || req.body?.model_name
+			}
 
 			// Internal method - can refresh for specific tenant or all tenants
 			if (!tenantCode) {
 				console.log(
-					'⚠️  [TRIGGER PERIODIC VIEW REFRESH] No tenant_code provided in query params or body, fetching all tenants...'
+					'⚠️  [TRIGGER PERIODIC VIEW REFRESH] No tenant_code provided in path params, query params, or body, fetching all tenants...'
 				)
 				const tenants = await userExtensionQueries.getDistinctTenantCodes()
 

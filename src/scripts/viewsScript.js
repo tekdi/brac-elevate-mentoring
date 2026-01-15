@@ -42,35 +42,17 @@ if (!process.env.SCHEDULER_SERVICE_BASE_URL) {
  * @param {string} modelName - The template for the notification.
  */
 const createSchedulerJob = function (jobId, interval, jobName, repeat, url, offset, tenantCode, modelName) {
-	// Extract base URL without query parameters since scheduler strips them
-	// Handle both absolute and relative URLs
-	let baseUrl = url
-	try {
-		const urlObj = new URL(url)
-		baseUrl = `${urlObj.origin}${urlObj.pathname}`
-	} catch (e) {
-		// If URL parsing fails (relative URL), extract pathname manually
-		const pathMatch = url.match(/^([^?]+)/)
-		if (pathMatch) {
-			baseUrl = pathMatch[1]
-		}
-	}
-
-	// Use POST method and pass tenant_code and model_name in request body
-	// since query parameters are stripped and headers aren't forwarded
+	// URL already has tenant_code and model_name encoded in the path
+	// Format: /mentoring/v1/admin/triggerPeriodicViewRefreshInternal/{tenantCode|modelName}
+	// The scheduler will call this URL, and the path parameter will be preserved
 	const bodyData = {
 		jobName: jobName,
 		email: [process.env.SCHEDULER_SERVICE_ERROR_REPORTING_EMAIL_ID],
 		request: {
-			url: baseUrl,
-			method: 'post',
+			url: url, // Use the full URL with path parameters
+			method: 'get', // Scheduler converts to GET anyway, so use GET
 			header: {
 				internal_access_token: process.env.INTERNAL_ACCESS_TOKEN,
-				'Content-Type': 'application/json',
-			},
-			reqBody: {
-				tenant_code: tenantCode || '',
-				model_name: modelName || '',
 			},
 		},
 		jobOptions: {
@@ -214,14 +196,18 @@ const triggerPeriodicViewRefresh = async () => {
 				const uniqueJobId = `repeatable_view_job_${tenantCode}_${model}_${timestamp}`
 				const jobName = `repeatable_view_job_${tenantCode}_${model}`
 
-				const url = `${mentoringBaseurl}/mentoring/v1/admin/triggerPeriodicViewRefreshInternal?model_name=${model}&tenant_code=${tenantCode}`
+				// Encode tenant_code and model_name in the URL path using :id parameter
+				// Format: /mentoring/v1/admin/triggerPeriodicViewRefreshInternal/{tenantCode|modelName}
+				// The route pattern :version/:controller/:method/:id supports this
+				const encodedParams = `${encodeURIComponent(tenantCode)}|${encodeURIComponent(model)}`
+				const url = `${mentoringBaseurl}/mentoring/v1/admin/triggerPeriodicViewRefreshInternal/${encodedParams}`
 
 				console.log(
 					`📝 [VIEWS SCRIPT] Creating job for tenant: ${tenantCode}, model: ${model}, interval: ${refreshInterval}ms`
 				)
 				console.log(`📝 [VIEWS SCRIPT] Job URL: ${url}`)
 
-				createSchedulerJob(uniqueJobId, refreshInterval, jobName, true, url, globalOffset)
+				createSchedulerJob(uniqueJobId, refreshInterval, jobName, true, url, globalOffset, tenantCode, model)
 
 				jobsCreated++
 				globalOffset += offset
