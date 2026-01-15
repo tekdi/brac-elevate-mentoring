@@ -41,14 +41,33 @@ if (!process.env.SCHEDULER_SERVICE_BASE_URL) {
  * @param {string} jobName - The name of the job.
  * @param {string} modelName - The template for the notification.
  */
-const createSchedulerJob = function (jobId, interval, jobName, repeat, url, offset) {
+const createSchedulerJob = function (jobId, interval, jobName, repeat, url, offset, tenantCode, modelName) {
+	// Extract base URL without query parameters since scheduler may strip them
+	// Handle both absolute and relative URLs
+	let baseUrl = url
+	try {
+		const urlObj = new URL(url)
+		baseUrl = `${urlObj.origin}${urlObj.pathname}`
+	} catch (e) {
+		// If URL parsing fails (relative URL), extract pathname manually
+		const pathMatch = url.match(/^([^?]+)/)
+		if (pathMatch) {
+			baseUrl = pathMatch[1]
+		}
+	}
+
 	const bodyData = {
 		jobName: jobName,
 		email: [process.env.SCHEDULER_SERVICE_ERROR_REPORTING_EMAIL_ID],
 		request: {
-			url,
+			url: baseUrl,
 			method: 'get',
-			header: { internal_access_token: process.env.INTERNAL_ACCESS_TOKEN },
+			header: {
+				internal_access_token: process.env.INTERNAL_ACCESS_TOKEN,
+				// Pass tenant_code and model_name in headers since query params are being stripped
+				'x-tenant-code': tenantCode || '',
+				'x-model-name': modelName || '',
+			},
 		},
 		jobOptions: {
 			jobId: jobId,
