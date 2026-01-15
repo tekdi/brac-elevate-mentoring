@@ -3,6 +3,7 @@ const httpStatusCode = require('@generics/http-status')
 const responses = require('@helpers/responses')
 
 const resourceQueries = require('@database/queries/resources')
+const cacheHelper = require('@generics/cacheHelper')
 
 module.exports = class SessionsHelper {
 	/**
@@ -25,6 +26,13 @@ module.exports = class SessionsHelper {
 					statusCode: httpStatusCode.bad_request,
 					responseCode: 'CLIENT_ERROR',
 				})
+			}
+
+			// Invalidate session cache after deleting resource
+			try {
+				await cacheHelper.sessions.delete(tenantCode, sessionId)
+			} catch (cacheError) {
+				// Cache invalidation failure - continue operation
 			}
 
 			return responses.successResponse({

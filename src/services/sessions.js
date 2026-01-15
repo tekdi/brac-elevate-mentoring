@@ -1459,6 +1459,14 @@ module.exports = class SessionsHelper {
 			}
 
 			if (utils.isNumeric(id) && sessionDetailedResponse) {
+				// Always fetch fresh resources from DB even if session is cached
+				// to ensure resources are up-to-date after deletions/updates
+				try {
+					sessionDetailedResponse['resources'] = await this.getResources(id, tenantCode)
+				} catch (resourceError) {
+					// If resource fetch fails, use cached resources as fallback
+					console.log('Error fetching resources for cached session:', resourceError)
+				}
 				try {
 					// Check accessibility for cached response
 					if (userId !== '' && isAMentor !== '') {
@@ -1544,6 +1552,7 @@ module.exports = class SessionsHelper {
 						delete sessionDetailedResponse.mentees
 					}
 
+					// Resources are already fetched fresh from DB at the beginning of this block
 					sessionDetailedResponse['resources'] = await this.getResourceAccessibleUrl(
 						sessionDetailedResponse['resources']
 					)
