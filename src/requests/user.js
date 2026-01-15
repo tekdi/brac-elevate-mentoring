@@ -500,6 +500,11 @@ const list = function (userType, pageNo, pageSize, searchText, tenantCode, organ
 			)
 
 			for (let user of userDetails.data) {
+				// Ensure user object has 'id' field for consistency (map from user_id if needed)
+				if (user.user_id && !user.id) {
+					user.id = user.user_id
+				}
+
 				let firstChar = user.name.charAt(0)
 				firstChar = firstChar.toUpperCase()
 

@@ -39,7 +39,9 @@ module.exports = class UserHelper {
 				tenantCode,
 				organizationCode
 			)
-			const ids = userDetails.result.data.map((item) => item.values[0].id)
+			const ids = userDetails.result.data
+				.map((item) => item.values[0]?.user_id || item.values[0]?.id)
+				.filter((id) => id != null)
 
 			let extensionDetails
 			if (userType == common.MENTEE_ROLE) {
@@ -64,7 +66,7 @@ module.exports = class UserHelper {
 			const extensionDataMap = new Map(extensionDetails.map((newItem) => [newItem.user_id, newItem]))
 
 			userDetails.result.data = userDetails.result.data.filter((existingItem) => {
-				const user_id = existingItem.values[0].id
+				const user_id = existingItem.values[0].user_id || existingItem.values[0].id
 				if (extensionDataMap.has(user_id)) {
 					const newItem = extensionDataMap.get(user_id)
 					existingItem.values[0] = { ...existingItem.values[0], ...newItem }
