@@ -892,8 +892,96 @@ module.exports = class SessionsHelper {
 						)
 					}
 				}
-				if (bodyData?.resources && sessionDetail.status != common.LIVE_STATUS) {
-					await this.addResources(bodyData.resources, userId, sessionId, tenantCode)
+				if (bodyData?.resources !== undefined && sessionDetail.status != common.LIVE_STATUS) {
+					console.log(
+						`📝 [SESSION UPDATE] Resources update requested - sessionId: ${sessionId}, resourcesCount: ${bodyData.resources.length}`
+					)
+					console.log(`📝 [SESSION UPDATE] Resources data:`, JSON.stringify(bodyData.resources, null, 2))
+
+					// Fetch existing resources for the session
+					const existingResources = await this.getResources(sessionId, tenantCode)
+					const existingResourceIds = existingResources.map((resource) => String(resource.id))
+					console.log(
+						`📝 [SESSION UPDATE] Existing resources - count: ${
+							existingResources.length
+						}, ids: [${existingResourceIds.join(', ')}]`
+					)
+
+					// Get IDs of resources to keep (resources with id in the new list)
+					const newResourceIds = bodyData.resources
+						.filter((resource) => resource.id)
+						.map((resource) => String(resource.id))
+					console.log(`📝 [SESSION UPDATE] New resource IDs to keep: [${newResourceIds.join(', ')}]`)
+
+					// Find resources to remove (existing resources not in the new list)
+					const resourcesToRemoveIds = existingResourceIds.filter((id) => !newResourceIds.includes(id))
+					console.log(
+						`📝 [SESSION UPDATE] Resources to remove - count: ${
+							resourcesToRemoveIds.length
+						}, ids: [${resourcesToRemoveIds.join(', ')}]`
+					)
+
+					// Remove resources that are not in the new list
+					if (resourcesToRemoveIds.length > 0) {
+						console.log(`🗑️ [SESSION UPDATE] Starting deletion of ${resourcesToRemoveIds.length} resources`)
+						for (const resourceId of resourcesToRemoveIds) {
+							console.log(`🗑️ [SESSION UPDATE] Deleting resource - resourceId: ${resourceId}`)
+							const deleteResult = await resourceQueries.deleteResourceByIdWithSessionValidation(
+								resourceId,
+								tenantCode
+							)
+							console.log(
+								`📊 [SESSION UPDATE] Delete result for resourceId ${resourceId}: ${deleteResult}`
+							)
+						}
+						// Invalidate session cache after deleting resources
+						try {
+							await cacheHelper.sessions.delete(tenantCode, sessionId)
+							console.log(`🗑️ [SESSION UPDATE] Session cache invalidated after resource deletion`)
+						} catch (cacheError) {
+							console.log(
+								`⚠️ [SESSION UPDATE] Cache invalidation failed (non-critical):`,
+								cacheError.message
+							)
+							// Cache invalidation failure - continue operation
+						}
+					} else {
+						console.log(`ℹ️ [SESSION UPDATE] No resources to remove`)
+					}
+
+					// Find resources to add (new resources without id, or with id not in existing list)
+					const resourcesToAdd = bodyData.resources.filter(
+						(resource) => !resource.id || !existingResourceIds.includes(String(resource.id))
+					)
+					console.log(`📝 [SESSION UPDATE] Resources to add - count: ${resourcesToAdd.length}`)
+
+					// Add new resources
+					if (resourcesToAdd.length > 0) {
+						console.log(`➕ [SESSION UPDATE] Adding ${resourcesToAdd.length} new resources`)
+						await this.addResources(resourcesToAdd, userId, sessionId, tenantCode)
+						console.log(`✅ [SESSION UPDATE] Resources added successfully`)
+						// Invalidate session cache after adding resources
+						try {
+							await cacheHelper.sessions.delete(tenantCode, sessionId)
+							console.log(`🗑️ [SESSION UPDATE] Session cache invalidated after resource addition`)
+						} catch (cacheError) {
+							console.log(
+								`⚠️ [SESSION UPDATE] Cache invalidation failed (non-critical):`,
+								cacheError.message
+							)
+							// Cache invalidation failure - continue operation
+						}
+					} else {
+						console.log(`ℹ️ [SESSION UPDATE] No new resources to add`)
+					}
+
+					// Verify final state
+					const finalResources = await this.getResources(sessionId, tenantCode)
+					console.log(
+						`✅ [SESSION UPDATE] Final resources after update - count: ${
+							finalResources.length
+						}, ids: [${finalResources.map((r) => r.id).join(', ')}]`
+					)
 
 					bodyData.resources.forEach((element) => {
 						if (element.type === common.SESSION_PRE_RESOURCE_TYPE) {
@@ -4230,10 +4318,14 @@ module.exports = class SessionsHelper {
 		return resourceInfo
 	}
 	static async getResources(sessionId, tenantCode) {
+		console.log(`🔍 [GET RESOURCES] Fetching resources - sessionId: ${sessionId}, tenantCode: ${tenantCode}`)
 		let resourceInfo = await resourceQueries.find({ session_id: sessionId }, tenantCode)
+		console.log(`📊 [GET RESOURCES] Found ${resourceInfo?.length || 0} resources for sessionId: ${sessionId}`)
 		if (resourceInfo && resourceInfo.length > 0) {
+			console.log(`📋 [GET RESOURCES] Resource IDs: [${resourceInfo.map((r) => r.id).join(', ')}]`)
 			return resourceInfo
 		} else {
+			console.log(`ℹ️ [GET RESOURCES] No resources found for sessionId: ${sessionId}`)
 			return []
 		}
 	}

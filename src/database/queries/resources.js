@@ -71,6 +71,10 @@ module.exports = class ResourcessData {
 
 	static async deleteResourceByIdWithSessionValidation(resourceId, tenantCode) {
 		try {
+			console.log(
+				`🗑️ [DELETE RESOURCE] Starting deletion for resourceId: ${resourceId}, tenantCode: ${tenantCode}`
+			)
+
 			// First, find the resource without include to get the session_id
 			const resource = await Resources.findOne({
 				where: { id: resourceId, tenant_code: tenantCode },
@@ -78,8 +82,13 @@ module.exports = class ResourcessData {
 			})
 
 			if (!resource) {
+				console.log(
+					`❌ [DELETE RESOURCE] Resource not found - resourceId: ${resourceId}, tenantCode: ${tenantCode}`
+				)
 				return 0 // No resource found
 			}
+
+			console.log(`✅ [DELETE RESOURCE] Resource found - id: ${resource.id}, session_id: ${resource.session_id}`)
 
 			// Validate that the session exists and belongs to the same tenant
 			const Session = Resources.sequelize.models.Sessions
@@ -89,16 +98,34 @@ module.exports = class ResourcessData {
 			})
 
 			if (!session) {
+				console.log(
+					`❌ [DELETE RESOURCE] Session not found or invalid - session_id: ${resource.session_id}, tenantCode: ${tenantCode}`
+				)
 				return 0 // Session not found or invalid
 			}
+
+			console.log(`✅ [DELETE RESOURCE] Session validated - session_id: ${resource.session_id}`)
 
 			// Delete the resource using destroy with where clause for reliable deletion
 			const deletedCount = await Resources.destroy({
 				where: { id: resourceId, tenant_code: tenantCode },
 			})
 
+			console.log(
+				`📊 [DELETE RESOURCE] Deletion result - deletedCount: ${deletedCount}, resourceId: ${resourceId}`
+			)
+
+			if (deletedCount > 0) {
+				console.log(`✅ [DELETE RESOURCE] Successfully deleted resource - resourceId: ${resourceId}`)
+			} else {
+				console.log(
+					`⚠️ [DELETE RESOURCE] No rows deleted - resourceId: ${resourceId}, tenantCode: ${tenantCode}`
+				)
+			}
+
 			return deletedCount > 0 ? 1 : 0
 		} catch (error) {
+			console.error(`❌ [DELETE RESOURCE] Error deleting resource - resourceId: ${resourceId}, error:`, error)
 			return error
 		}
 	}
@@ -110,13 +137,19 @@ module.exports = class ResourcessData {
 				deleted_at: null,
 				tenant_code: tenantCode,
 			}
+			console.log(`🔍 [RESOURCE FIND] Querying resources with filter:`, JSON.stringify(whereClause, null, 2))
 			const ResourcesData = await Resources.findAll({
 				where: whereClause,
 				attributes: projection,
 				raw: true,
 			})
+			console.log(`📊 [RESOURCE FIND] Found ${ResourcesData?.length || 0} resources`)
+			if (ResourcesData && ResourcesData.length > 0) {
+				console.log(`📋 [RESOURCE FIND] Resource IDs: [${ResourcesData.map((r) => r.id).join(', ')}]`)
+			}
 			return ResourcesData
 		} catch (error) {
+			console.error(`❌ [RESOURCE FIND] Error querying resources:`, error)
 			return error
 		}
 	}
