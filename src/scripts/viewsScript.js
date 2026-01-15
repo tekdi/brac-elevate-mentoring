@@ -42,7 +42,7 @@ if (!process.env.SCHEDULER_SERVICE_BASE_URL) {
  * @param {string} modelName - The template for the notification.
  */
 const createSchedulerJob = function (jobId, interval, jobName, repeat, url, offset, tenantCode, modelName) {
-	// Extract base URL without query parameters since scheduler may strip them
+	// Extract base URL without query parameters since scheduler strips them
 	// Handle both absolute and relative URLs
 	let baseUrl = url
 	try {
@@ -56,17 +56,21 @@ const createSchedulerJob = function (jobId, interval, jobName, repeat, url, offs
 		}
 	}
 
+	// Use POST method and pass tenant_code and model_name in request body
+	// since query parameters are stripped and headers aren't forwarded
 	const bodyData = {
 		jobName: jobName,
 		email: [process.env.SCHEDULER_SERVICE_ERROR_REPORTING_EMAIL_ID],
 		request: {
 			url: baseUrl,
-			method: 'get',
+			method: 'post',
 			header: {
 				internal_access_token: process.env.INTERNAL_ACCESS_TOKEN,
-				// Pass tenant_code and model_name in headers since query params are being stripped
-				'x-tenant-code': tenantCode || '',
-				'x-model-name': modelName || '',
+				'Content-Type': 'application/json',
+			},
+			reqBody: {
+				tenant_code: tenantCode || '',
+				model_name: modelName || '',
 			},
 		},
 		jobOptions: {

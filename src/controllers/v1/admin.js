@@ -87,23 +87,21 @@ module.exports = class admin {
 	}
 	async triggerPeriodicViewRefreshInternal(req) {
 		try {
-			// Log all query parameters, headers, and URL for debugging
+			// Log all query parameters, body, headers, and URL for debugging
+			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request method:`, req.method)
 			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request query params:`, JSON.stringify(req.query))
-			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request headers (x-tenant-code, x-model-name):`, {
-				'x-tenant-code': req.headers['x-tenant-code'],
-				'x-model-name': req.headers['x-model-name'],
-			})
+			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request body:`, JSON.stringify(req.body))
 			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request URL:`, req.url)
 			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request originalUrl:`, req.originalUrl)
 
-			// Get tenant_code and model_name from query params or headers (headers are fallback if query params are stripped)
-			const tenantCode = req.query.tenant_code || req.headers['x-tenant-code']
-			const modelName = req.query.model_name || req.headers['x-model-name']
+			// Get tenant_code and model_name from query params (for GET requests) or body (for POST requests from scheduler)
+			const tenantCode = req.query.tenant_code || req.body?.tenant_code
+			const modelName = req.query.model_name || req.body?.model_name
 
 			// Internal method - can refresh for specific tenant or all tenants
 			if (!tenantCode) {
 				console.log(
-					'⚠️  [TRIGGER PERIODIC VIEW REFRESH] No tenant_code provided in query params or headers, fetching all tenants...'
+					'⚠️  [TRIGGER PERIODIC VIEW REFRESH] No tenant_code provided in query params or body, fetching all tenants...'
 				)
 				const tenants = await userExtensionQueries.getDistinctTenantCodes()
 
