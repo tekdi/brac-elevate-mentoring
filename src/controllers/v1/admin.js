@@ -104,7 +104,12 @@ module.exports = class admin {
 			// Specific tenantCode provided - refresh for that tenant only
 			return await adminService.triggerPeriodicViewRefreshInternal(req.query.model_name, req.query.tenant_code)
 		} catch (err) {
-			console.log(err)
+			console.error('Error in triggerPeriodicViewRefreshInternal:', err)
+			return responses.failureResponse({
+				statusCode: httpStatusCode.internal_server_error,
+				message: 'MATERIALIZED_VIEW_REFRESH_FAILED',
+				responseCode: 'SERVER_ERROR',
+			})
 		}
 	}
 

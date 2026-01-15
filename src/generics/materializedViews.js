@@ -425,7 +425,19 @@ const modelNameCollector = async (entityTypes) => {
 
 const refreshMaterializedView = async (modelName, tenantCode) => {
 	try {
+		if (!modelName || !tenantCode) {
+			logger.warn(
+				`refreshMaterializedView: Missing parameters - modelName: ${modelName}, tenantCode: ${tenantCode}`
+			)
+			return { success: false, message: 'Missing required parameters' }
+		}
+
 		const model = models[modelName]
+		if (!model) {
+			logger.warn(`refreshMaterializedView: Model not found - modelName: ${modelName}`)
+			return { success: false, message: `Model ${modelName} not found` }
+		}
+
 		const viewName = utils.getTenantViewName(tenantCode, model.tableName)
 
 		// Check if a REFRESH MATERIALIZED VIEW query is already running
@@ -437,13 +449,27 @@ const refreshMaterializedView = async (modelName, tenantCode) => {
 
 		// If there are active refresh queries, skip refreshing the materialized view
 		if (activeQueries.length > 0) {
-			return
+			logger.info(`refreshMaterializedView: Skipping refresh for ${viewName} - refresh already in progress`)
+			return { success: true, message: 'Refresh already in progress', skipped: true }
 		}
 
 		// If no active refresh queries, proceed with refreshing the materialized view
 		const [result, metadata] = await sequelize.query(`REFRESH MATERIALIZED VIEW CONCURRENTLY ${viewName}`)
-		return { message: 'Materialized view refreshed successfully', result, metadata }
-	} catch (err) {}
+		logger.info(`refreshMaterializedView: Successfully refreshed ${viewName} for tenant ${tenantCode}`)
+		return {
+			success: true,
+			message: 'Materialized view refreshed successfully',
+			result,
+			metadata,
+			rowCount: metadata?.rowCount,
+		}
+	} catch (err) {
+		logger.error(
+			`refreshMaterializedView: Error refreshing view for model ${modelName}, tenant ${tenantCode}:`,
+			err.message || err
+		)
+		return { success: false, message: err.message || 'Failed to refresh materialized view', error: err }
+	}
 }
 
 const refreshNextView = (currentIndex, modelNames, tenantCode) => {

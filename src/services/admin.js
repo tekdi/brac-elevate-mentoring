@@ -844,19 +844,49 @@ module.exports = class AdminService {
 	}
 	static async triggerPeriodicViewRefreshInternal(modelName, tenantCode) {
 		try {
-			const result = await adminService.refreshMaterializedView(modelName, tenantCode)
-			// Only log if there's an actual refresh or error
-			if (result && result.rowCount) {
-				console.log(`Materialized view refreshed for ${modelName}, tenant: ${tenantCode}`)
+			if (!modelName || !tenantCode) {
+				return responses.failureResponse({
+					statusCode: httpStatusCode.bad_request,
+					message: 'MODEL_NAME_AND_TENANT_CODE_REQUIRED',
+					responseCode: 'CLIENT_ERROR',
+				})
 			}
+
+			const result = await adminService.refreshMaterializedView(modelName, tenantCode)
+
+			if (result && result.success) {
+				if (result.skipped) {
+					console.log(
+						`⏭️  Materialized view refresh skipped for ${modelName}, tenant: ${tenantCode} - refresh already in progress`
+					)
+				} else {
+					console.log(`✅ Materialized view refreshed successfully for ${modelName}, tenant: ${tenantCode}`)
+				}
+			} else {
+				console.warn(
+					`⚠️  Materialized view refresh failed for ${modelName}, tenant: ${tenantCode}:`,
+					result?.message || 'Unknown error'
+				)
+			}
+
 			return responses.successResponse({
 				statusCode: httpStatusCode.ok,
 				message: 'MATERIALIZED_VIEW_REFRESH_INITIATED_SUCCESSFULLY',
+				result: result,
 				tenantCode: tenantCode,
+				modelName: modelName,
 			})
 		} catch (error) {
-			console.error('An error occurred in userDelete:', error)
-			return error
+			console.error(
+				`❌ Error in triggerPeriodicViewRefreshInternal for ${modelName}, tenant ${tenantCode}:`,
+				error
+			)
+			return responses.failureResponse({
+				statusCode: httpStatusCode.internal_server_error,
+				message: 'MATERIALIZED_VIEW_REFRESH_FAILED',
+				responseCode: 'SERVER_ERROR',
+				result: { error: error.message || 'Unknown error' },
+			})
 		}
 	}
 
