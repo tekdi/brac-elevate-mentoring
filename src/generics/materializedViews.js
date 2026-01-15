@@ -488,8 +488,14 @@ const refreshNextView = (currentIndex, modelNames, tenantCode) => {
 
 const triggerPeriodicViewRefresh = async (tenantCode) => {
 	try {
+		console.log(`🔄 [TRIGGER PERIODIC VIEW REFRESH] Starting for tenant: ${tenantCode}`)
 		const allowFilteringEntityTypes = await getAllowFilteringEntityTypes(tenantCode)
 		const modelNames = await modelNameCollector(allowFilteringEntityTypes)
+		console.log(
+			`📋 [TRIGGER PERIODIC VIEW REFRESH] Found ${modelNames.length} models for tenant ${tenantCode}:`,
+			modelNames.join(', ')
+		)
+
 		const interval = process.env.REFRESH_VIEW_INTERVAL
 		let currentIndex = 0
 
@@ -500,8 +506,9 @@ const triggerPeriodicViewRefresh = async (tenantCode) => {
 
 		// Immediately trigger the first refresh
 		currentIndex = refreshNextView(currentIndex, modelNames, tenantCode)
+		console.log(`✅ [TRIGGER PERIODIC VIEW REFRESH] Started periodic refresh for tenant: ${tenantCode}`)
 	} catch (err) {
-		console.log(err)
+		console.error(`❌ [TRIGGER PERIODIC VIEW REFRESH] Error for tenant ${tenantCode}:`, err)
 	}
 }
 

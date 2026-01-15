@@ -89,12 +89,17 @@ module.exports = class admin {
 		try {
 			// Internal method - can refresh for specific tenant or all tenants
 			if (!req.query.tenant_code) {
+				console.log('🔍 [TRIGGER PERIODIC VIEW REFRESH] No tenant_code provided, fetching all tenants...')
 				const tenants = await userExtensionQueries.getDistinctTenantCodes()
 
 				if (tenants.length > 0) {
+					console.log(
+						`✅ [TRIGGER PERIODIC VIEW REFRESH] Using first tenant: ${tenants[0].code} (from ${tenants.length} total tenants)`
+					)
 					return await adminService.triggerPeriodicViewRefreshInternal(req.query.model_name, tenants[0].code)
 				}
 
+				console.warn('⚠️  [TRIGGER PERIODIC VIEW REFRESH] No tenants found')
 				return responses.successResponse({
 					statusCode: httpStatusCode.ok,
 					message: 'NO_TENANTS_FOUND',
@@ -102,9 +107,14 @@ module.exports = class admin {
 			}
 
 			// Specific tenantCode provided - refresh for that tenant only
+			console.log(
+				`🔍 [TRIGGER PERIODIC VIEW REFRESH] Using provided tenant_code: ${req.query.tenant_code}, model_name: ${
+					req.query.model_name || 'all models'
+				}`
+			)
 			return await adminService.triggerPeriodicViewRefreshInternal(req.query.model_name, req.query.tenant_code)
 		} catch (err) {
-			console.error('Error in triggerPeriodicViewRefreshInternal:', err)
+			console.error('❌ Error in triggerPeriodicViewRefreshInternal:', err)
 			return responses.failureResponse({
 				statusCode: httpStatusCode.internal_server_error,
 				message: 'MATERIALIZED_VIEW_REFRESH_FAILED',

@@ -146,7 +146,8 @@ const triggerPeriodicViewRefresh = async () => {
 		}
 
 		const tenants = await userExtensionQueries.getDistinctTenantCodes()
-		console.log(`Starting periodic refresh for ${tenants.length} tenants`)
+		console.log(`📋 [VIEWS SCRIPT] Found ${tenants.length} tenants:`, tenants.map((t) => t.code).join(', '))
+		console.log(`🔄 [VIEWS SCRIPT] Starting periodic refresh for ${tenants.length} tenants`)
 
 		if (!tenants || tenants.length === 0) {
 			console.log('⚠️  No tenants found. Skipping periodic view refresh setup.')
@@ -172,9 +173,11 @@ const triggerPeriodicViewRefresh = async () => {
 
 			// Skip tenants with undefined or empty tenant codes
 			if (!tenantCode || tenantCode === 'undefined') {
-				console.log(`⚠️  Skipping tenant with invalid code in refresh:`, tenant)
+				console.log(`⚠️  [VIEWS SCRIPT] Skipping tenant with invalid code in refresh:`, tenant)
 				continue
 			}
+
+			console.log(`🔄 [VIEWS SCRIPT] Processing tenant: ${tenantCode} (${modelNames.length} models)`)
 
 			let offset = baseInterval / (modelNames.length * tenants.length)
 			modelNames.forEach((model, index) => {
@@ -189,6 +192,10 @@ const triggerPeriodicViewRefresh = async () => {
 				const jobName = `repeatable_view_job_${tenantCode}_${model}`
 
 				const url = `${mentoringBaseurl}/mentoring/v1/admin/triggerPeriodicViewRefreshInternal?model_name=${model}&tenant_code=${tenantCode}`
+
+				console.log(
+					`📝 [VIEWS SCRIPT] Creating job for tenant: ${tenantCode}, model: ${model}, interval: ${refreshInterval}ms`
+				)
 
 				createSchedulerJob(uniqueJobId, refreshInterval, jobName, true, url, globalOffset)
 
