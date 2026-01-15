@@ -464,7 +464,7 @@ const list = function (userType, pageNo, pageSize, searchText, tenantCode, organ
 				pageNo,
 				pageSize,
 				filter,
-				(saasFilter = ''),
+				saasFilter,
 				(additionalProjectionClause = `name,email,organization_id`),
 				(returnOnlyUserId = false),
 				searchText ? searchText : '',
