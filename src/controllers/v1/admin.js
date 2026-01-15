@@ -87,14 +87,21 @@ module.exports = class admin {
 	}
 	async triggerPeriodicViewRefreshInternal(req) {
 		try {
+			// Log all query parameters and URL for debugging
+			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request query params:`, JSON.stringify(req.query))
+			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request URL:`, req.url)
+			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request originalUrl:`, req.originalUrl)
+
 			// Internal method - can refresh for specific tenant or all tenants
 			if (!req.query.tenant_code) {
-				console.log('🔍 [TRIGGER PERIODIC VIEW REFRESH] No tenant_code provided, fetching all tenants...')
+				console.log(
+					'⚠️  [TRIGGER PERIODIC VIEW REFRESH] No tenant_code provided in query params, fetching all tenants...'
+				)
 				const tenants = await userExtensionQueries.getDistinctTenantCodes()
 
 				if (tenants.length > 0) {
 					console.log(
-						`✅ [TRIGGER PERIODIC VIEW REFRESH] Using first tenant: ${tenants[0].code} (from ${tenants.length} total tenants)`
+						`⚠️  [TRIGGER PERIODIC VIEW REFRESH] WARNING: Using first tenant: ${tenants[0].code} (from ${tenants.length} total tenants). This should not happen if scheduler jobs are configured correctly.`
 					)
 					return await adminService.triggerPeriodicViewRefreshInternal(req.query.model_name, tenants[0].code)
 				}
@@ -108,7 +115,7 @@ module.exports = class admin {
 
 			// Specific tenantCode provided - refresh for that tenant only
 			console.log(
-				`🔍 [TRIGGER PERIODIC VIEW REFRESH] Using provided tenant_code: ${req.query.tenant_code}, model_name: ${
+				`✅ [TRIGGER PERIODIC VIEW REFRESH] Using provided tenant_code: ${req.query.tenant_code}, model_name: ${
 					req.query.model_name || 'all models'
 				}`
 			)

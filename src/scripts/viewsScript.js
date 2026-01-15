@@ -196,6 +196,7 @@ const triggerPeriodicViewRefresh = async () => {
 				console.log(
 					`📝 [VIEWS SCRIPT] Creating job for tenant: ${tenantCode}, model: ${model}, interval: ${refreshInterval}ms`
 				)
+				console.log(`📝 [VIEWS SCRIPT] Job URL: ${url}`)
 
 				createSchedulerJob(uniqueJobId, refreshInterval, jobName, true, url, globalOffset)
 
