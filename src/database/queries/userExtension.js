@@ -565,6 +565,11 @@ module.exports = class MenteeExtensionQueries {
 				replacements.tenantCode = tenantCode
 			}
 
+			// Add organizationCode to replacements if it's in filter.replacements (from saasFilter)
+			if (filter.replacements.organizationCode) {
+				replacements.organizationCode = filter.replacements.organizationCode
+			}
+
 			// Always provide offset and limit replacements since they're in the query
 			if (page !== null && limit !== null) {
 				replacements.offset = limit * (page - 1)

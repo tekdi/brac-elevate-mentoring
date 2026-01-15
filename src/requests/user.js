@@ -424,6 +424,8 @@ const share = function (profileId) {
  * @param {number} pageNo - The page number to fetch.
  * @param {number} pageSize - The number of records per page.
  * @param {string} [searchText] - Optional search text to filter users.
+ * @param {string} tenantCode - Tenant code for filtering.
+ * @param {string} [organizationCode] - Optional organization code for filtering (used by org_admin).
  * @returns {Promise<object>} - A promise that resolves to an object containing the list of users.
  *
  * @example
@@ -436,7 +438,7 @@ const share = function (profileId) {
 
  */
 
-const list = function (userType, pageNo, pageSize, searchText, tenantCode) {
+const list = function (userType, pageNo, pageSize, searchText, tenantCode, organizationCode) {
 	return new Promise(async (resolve, reject) => {
 		try {
 			const filter = {
@@ -448,6 +450,13 @@ const list = function (userType, pageNo, pageSize, searchText, tenantCode) {
 			if (userType) {
 				filter.query += `is_mentor = :is_mentor `
 				filter.replacements.is_mentor = userType.toLowerCase() === common.MENTOR_ROLE ? true : false
+			}
+
+			// Add organization filter for org_admin users
+			let saasFilter = ''
+			if (organizationCode) {
+				saasFilter = `AND organization_code = :organizationCode`
+				filter.replacements.organizationCode = organizationCode
 			}
 
 			const userDetails = await menteeQueries.getAllUsers(

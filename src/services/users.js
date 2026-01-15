@@ -18,18 +18,27 @@ module.exports = class UserHelper {
 	/**
 	 * Get user list.
 	 * @method
-	 * @name create
+	 * @name list
 	 * @param {String} userType 				- mentee/mentor.
-	 * @param {Number} pageSize 				- Page size.
 	 * @param {Number} pageNo 					- Page number.
+	 * @param {Number} pageSize 				- Page size.
 	 * @param {String} searchText 				- Search text.
-	 * @param {Number} searchText 				- userId.
+	 * @param {Number} userId 					- User ID.
+	 * @param {String} organizationCode 		- Organization code for filtering (used by org_admin).
+	 * @param {String} tenantCode 				- Tenant code.
 	 * @returns {JSON} 							- User list.
 	 */
 
-	static async list(userType, pageNo, pageSize, searchText, userId, organizationId, tenantCode) {
+	static async list(userType, pageNo, pageSize, searchText, userId, organizationCode, tenantCode) {
 		try {
-			const userDetails = await userRequests.list(userType, pageNo, pageSize, searchText, tenantCode)
+			const userDetails = await userRequests.list(
+				userType,
+				pageNo,
+				pageSize,
+				searchText,
+				tenantCode,
+				organizationCode
+			)
 			const ids = userDetails.result.data.map((item) => item.values[0].id)
 
 			let extensionDetails
