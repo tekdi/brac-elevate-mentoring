@@ -708,11 +708,6 @@ module.exports = class MenteeExtensionQueries {
 				return []
 			}
 
-			console.log(
-				`📋 [GET DISTINCT TENANT CODES] Found ${tenants.length} tenants:`,
-				tenants.map((t) => t.code).join(', ')
-			)
-
 			return tenants
 		} catch (error) {
 			console.error('Error fetching distinct tenant codes:', error)

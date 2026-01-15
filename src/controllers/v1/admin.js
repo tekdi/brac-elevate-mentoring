@@ -10,8 +10,8 @@ const adminService = require('@services/admin')
 const common = require('@constants/common')
 const httpStatusCode = require('@generics/http-status')
 const responses = require('@helpers/responses')
-const userExtensionQueries = require('@database/queries/userExtension')
 const cacheHelper = require('@generics/cacheHelper')
+const userExtensionQueries = require('@database/queries/userExtension')
 
 module.exports = class admin {
 	/**
@@ -87,14 +87,6 @@ module.exports = class admin {
 	}
 	async triggerPeriodicViewRefreshInternal(req) {
 		try {
-			// Log all query parameters, body, path params, headers, and URL for debugging
-			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request method:`, req.method)
-			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request query params:`, JSON.stringify(req.query))
-			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request body:`, JSON.stringify(req.body))
-			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request params:`, JSON.stringify(req.params))
-			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request URL:`, req.url)
-			console.log(`🔍 [TRIGGER PERIODIC VIEW REFRESH] Request originalUrl:`, req.originalUrl)
-
 			let tenantCode = null
 			let modelName = null
 
@@ -105,9 +97,6 @@ module.exports = class admin {
 				if (parts.length === 2) {
 					tenantCode = decodeURIComponent(parts[0])
 					modelName = decodeURIComponent(parts[1])
-					console.log(
-						`📋 [TRIGGER PERIODIC VIEW REFRESH] Extracted from path param: tenant=${tenantCode}, model=${modelName}`
-					)
 				}
 			}
 
@@ -117,34 +106,58 @@ module.exports = class admin {
 				modelName = req.query.model_name || req.body?.model_name
 			}
 
-			// Internal method - can refresh for specific tenant or all tenants
-			if (!tenantCode) {
-				console.log(
-					'⚠️  [TRIGGER PERIODIC VIEW REFRESH] No tenant_code provided in path params, query params, or body, fetching all tenants...'
-				)
-				const tenants = await userExtensionQueries.getDistinctTenantCodes()
+			// If tenantCode is provided, refresh for that specific tenant
+			if (tenantCode) {
+				return await adminService.triggerPeriodicViewRefreshInternal(modelName, tenantCode)
+			}
 
-				if (tenants.length > 0) {
-					console.log(
-						`⚠️  [TRIGGER PERIODIC VIEW REFRESH] WARNING: Using first tenant: ${tenants[0].code} (from ${tenants.length} total tenants). This should not happen if scheduler jobs are configured correctly.`
-					)
-					return await adminService.triggerPeriodicViewRefreshInternal(modelName, tenants[0].code)
-				}
+			// If no tenantCode provided, fetch all tenants dynamically and refresh for each
+			const tenants = await userExtensionQueries.getDistinctTenantCodes()
 
-				console.warn('⚠️  [TRIGGER PERIODIC VIEW REFRESH] No tenants found')
+			if (!tenants || tenants.length === 0) {
 				return responses.successResponse({
 					statusCode: httpStatusCode.ok,
 					message: 'NO_TENANTS_FOUND',
+					result: { tenantsProcessed: 0 },
 				})
 			}
 
-			// Specific tenantCode provided - refresh for that tenant only
-			console.log(
-				`✅ [TRIGGER PERIODIC VIEW REFRESH] Using tenant_code: ${tenantCode}, model_name: ${
-					modelName || 'all models'
-				}`
-			)
-			return await adminService.triggerPeriodicViewRefreshInternal(modelName, tenantCode)
+			// Process each tenant
+			const results = []
+			for (const tenant of tenants) {
+				const tenantCodeToProcess = tenant.code
+
+				// Skip invalid tenant codes
+				if (!tenantCodeToProcess || tenantCodeToProcess === 'undefined') {
+					continue
+				}
+
+				try {
+					const result = await adminService.triggerPeriodicViewRefreshInternal(modelName, tenantCodeToProcess)
+					results.push({
+						tenantCode: tenantCodeToProcess,
+						modelName: modelName || 'all models',
+						success: result.statusCode === httpStatusCode.ok,
+						result: result.result,
+					})
+				} catch (error) {
+					results.push({
+						tenantCode: tenantCodeToProcess,
+						modelName: modelName || 'all models',
+						success: false,
+						error: error.message || 'Unknown error',
+					})
+				}
+			}
+
+			return responses.successResponse({
+				statusCode: httpStatusCode.ok,
+				message: 'MATERIALIZED_VIEW_REFRESH_INITIATED_SUCCESSFULLY',
+				result: {
+					tenantsProcessed: results.length,
+					results: results,
+				},
+			})
 		} catch (err) {
 			console.error('❌ Error in triggerPeriodicViewRefreshInternal:', err)
 			return responses.failureResponse({

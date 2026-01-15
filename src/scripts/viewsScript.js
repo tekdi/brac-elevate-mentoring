@@ -39,9 +39,8 @@ if (!process.env.SCHEDULER_SERVICE_BASE_URL) {
  * @param {string} jobId - The unique identifier for the job.
  * @param {number} interval - The delay in milliseconds before the job is executed.
  * @param {string} jobName - The name of the job.
- * @param {string} modelName - The template for the notification.
  */
-const createSchedulerJob = function (jobId, interval, jobName, repeat, url, offset, tenantCode, modelName) {
+const createSchedulerJob = function (jobId, interval, jobName, repeat, url, offset) {
 	// URL already has tenant_code and model_name encoded in the path
 	// Format: /mentoring/v1/admin/triggerPeriodicViewRefreshInternal/{tenantCode|modelName}
 	// The scheduler will call this URL, and the path parameter will be preserved
@@ -151,8 +150,6 @@ const triggerPeriodicViewRefresh = async () => {
 		}
 
 		const tenants = await userExtensionQueries.getDistinctTenantCodes()
-		console.log(`📋 [VIEWS SCRIPT] Found ${tenants.length} tenants:`, tenants.map((t) => t.code).join(', '))
-		console.log(`🔄 [VIEWS SCRIPT] Starting periodic refresh for ${tenants.length} tenants`)
 
 		if (!tenants || tenants.length === 0) {
 			console.log('⚠️  No tenants found. Skipping periodic view refresh setup.')
@@ -178,11 +175,8 @@ const triggerPeriodicViewRefresh = async () => {
 
 			// Skip tenants with undefined or empty tenant codes
 			if (!tenantCode || tenantCode === 'undefined') {
-				console.log(`⚠️  [VIEWS SCRIPT] Skipping tenant with invalid code in refresh:`, tenant)
 				continue
 			}
-
-			console.log(`🔄 [VIEWS SCRIPT] Processing tenant: ${tenantCode} (${modelNames.length} models)`)
 
 			let offset = baseInterval / (modelNames.length * tenants.length)
 			modelNames.forEach((model, index) => {
@@ -202,12 +196,7 @@ const triggerPeriodicViewRefresh = async () => {
 				const encodedParams = `${encodeURIComponent(tenantCode)}|${encodeURIComponent(model)}`
 				const url = `${mentoringBaseurl}/mentoring/v1/admin/triggerPeriodicViewRefreshInternal/${encodedParams}`
 
-				console.log(
-					`📝 [VIEWS SCRIPT] Creating job for tenant: ${tenantCode}, model: ${model}, interval: ${refreshInterval}ms`
-				)
-				console.log(`📝 [VIEWS SCRIPT] Job URL: ${url}`)
-
-				createSchedulerJob(uniqueJobId, refreshInterval, jobName, true, url, globalOffset, tenantCode, model)
+				createSchedulerJob(uniqueJobId, refreshInterval, jobName, true, url, globalOffset)
 
 				jobsCreated++
 				globalOffset += offset
