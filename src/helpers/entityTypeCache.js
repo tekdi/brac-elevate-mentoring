@@ -274,11 +274,14 @@ async function getEntityTypesAndEntitiesForModel(modelName, tenantCode, orgCode,
 
 		let allEntityTypes = []
 		try {
+			// Escape modelName to prevent SQL injection
+			const modelNameLiteral = Sequelize.literal(`ARRAY[${Sequelize.escape(modelName)}]::character varying[]`)
+
 			// Step 1: ALWAYS fetch from user tenant and org codes
 			const userFilter = {
 				status: 'ACTIVE',
 				organization_code: orgCode,
-				model_names: { [Op.contains]: Sequelize.literal(`ARRAY['${modelName}']::character varying[]`) },
+				model_names: { [Op.contains]: modelNameLiteral },
 			}
 			const userEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, [tenantCode])
 			if (userEntityTypes && userEntityTypes.length > 0) {
@@ -294,7 +297,7 @@ async function getEntityTypesAndEntitiesForModel(modelName, tenantCode, orgCode,
 				const defaultFilter = {
 					status: 'ACTIVE',
 					organization_code: defaults.orgCode,
-					model_names: { [Op.contains]: Sequelize.literal(`ARRAY['${modelName}']::character varying[]`) },
+					model_names: { [Op.contains]: modelNameLiteral },
 				}
 				const defaultEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(defaultFilter, [
 					defaults.tenantCode,
@@ -405,12 +408,15 @@ async function getEntityTypeByValue(modelName, entityValue, tenantCode, orgCode)
 	// Fallback to database query if not in cache
 	let found = null
 	try {
+		// Escape modelName to prevent SQL injection
+		const modelNameLiteral = Sequelize.literal(`ARRAY[${Sequelize.escape(modelName)}]::character varying[]`)
+
 		// First try with user tenant and org codes
 		const userFilter = {
 			status: 'ACTIVE',
 			value: entityValue,
 			organization_code: orgCode,
-			model_names: { [Op.contains]: Sequelize.literal(`ARRAY['${modelName}']::character varying[]`) },
+			model_names: { [Op.contains]: modelNameLiteral },
 		}
 		let entityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, [tenantCode])
 		found = entityTypes.length > 0 ? entityTypes[0] : null
@@ -427,7 +433,7 @@ async function getEntityTypeByValue(modelName, entityValue, tenantCode, orgCode)
 				status: 'ACTIVE',
 				value: entityValue,
 				organization_code: defaults.orgCode,
-				model_names: { [Op.contains]: Sequelize.literal(`ARRAY['${modelName}']::character varying[]`) },
+				model_names: { [Op.contains]: modelNameLiteral },
 			}
 			entityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(defaultFilter, [defaults.tenantCode])
 			found = entityTypes.length > 0 ? entityTypes[0] : null

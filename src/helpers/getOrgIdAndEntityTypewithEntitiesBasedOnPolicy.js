@@ -257,10 +257,10 @@ module.exports = class OrganizationAndEntityTypePolicyHelper {
 				}
 			}
 			if (modelName) {
-				// Use Sequelize.literal to force correct PostgreSQL array type for character varying[] column
+				// Pass array directly to Op.contains - Sequelize handles PostgreSQL array operations safely
 				const modelNameValue = Array.isArray(modelName) ? modelName[0] : modelName
 				filter.model_names = {
-					[Op.contains]: Sequelize.literal(`ARRAY['${modelNameValue}']::character varying[]`),
+					[Op.contains]: [modelNameValue],
 				}
 			}
 			//fetch entity types and entities

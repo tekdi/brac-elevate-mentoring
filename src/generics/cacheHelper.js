@@ -564,11 +564,14 @@ const entityTypes = {
 
 			let entityTypeFromDb = []
 			try {
+				// Escape modelName to prevent SQL injection
+				const modelNameLiteral = Sequelize.literal(`ARRAY[${Sequelize.escape(modelName)}]::character varying[]`)
+
 				// Step 1: Fetch from user tenant and org codes
 				const userFilter = {
 					status: 'ACTIVE',
 					organization_code: orgCode,
-					model_names: { [Op.contains]: Sequelize.literal(`ARRAY['${modelName}']::character varying[]`) },
+					model_names: { [Op.contains]: modelNameLiteral },
 					value: entityValue,
 				}
 				const userEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, [tenantCode])
@@ -593,7 +596,7 @@ const entityTypes = {
 					const defaultFilter = {
 						status: 'ACTIVE',
 						organization_code: defaults.orgCode,
-						model_names: { [Op.contains]: Sequelize.literal(`ARRAY['${modelName}']::character varying[]`) },
+						model_names: { [Op.contains]: modelNameLiteral },
 						value: entityValue,
 					}
 					const defaultEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(defaultFilter, [
@@ -682,11 +685,14 @@ const entityTypes = {
 
 			let entityTypes = []
 			try {
+				// Escape modelName to prevent SQL injection
+				const modelNameLiteral = Sequelize.literal(`ARRAY[${Sequelize.escape(modelName)}]::character varying[]`)
+
 				// Step 1: Fetch from user tenant and org codes
 				const userFilter = {
 					status: 'ACTIVE',
 					organization_code: orgCode,
-					model_names: { [Op.contains]: Sequelize.literal(`ARRAY['${modelName}']::character varying[]`) },
+					model_names: { [Op.contains]: modelNameLiteral },
 				}
 				const userEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, [tenantCode])
 				if (userEntityTypes && userEntityTypes.length > 0) {
@@ -710,7 +716,7 @@ const entityTypes = {
 					const defaultFilter = {
 						status: 'ACTIVE',
 						organization_code: defaults.orgCode,
-						model_names: { [Op.contains]: Sequelize.literal(`ARRAY['${modelName}']::character varying[]`) },
+						model_names: { [Op.contains]: modelNameLiteral },
 					}
 					const defaultEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(defaultFilter, [
 						defaults.tenantCode,
