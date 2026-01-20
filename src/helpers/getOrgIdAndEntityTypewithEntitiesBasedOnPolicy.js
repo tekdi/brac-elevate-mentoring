@@ -274,9 +274,11 @@ module.exports = class OrganizationAndEntityTypePolicyHelper {
 					// It handles defaults internally, so we pass the first (user) code
 					const userTenantCode = finalTenantCodes[0] || tenantCodeArray[0]
 					const userOrgCode = finalOrgCodes[0] || orgCodes[0]
+					// Handle both string and array cases for modelName
+					const modelNameValue = Array.isArray(modelName) ? modelName[0] : modelName
 
 					entityTypesWithEntities = await entityTypeCache.getEntityTypesAndEntitiesForModel(
-						modelName[0],
+						modelNameValue,
 						userTenantCode,
 						userOrgCode,
 						{
