@@ -53,7 +53,7 @@ services:
   mentoring:
     image: shikshalokamqa/elevate-mentoring:3.2
     ports:
-      - "3000:3000"
+      - "3033:3033"
     command: >
       bash -c "echo 'Waiting for PostgreSQL on citus_master:5432 to accept connections...' &&
       while ! timeout 1 bash -c 'cat < /dev/null > /dev/tcp/citus_master/5432' 2> /dev/null; do
@@ -63,14 +63,16 @@ services:
       echo 'Database is ready.';
       (while ! curl -sSf http://user:3001 > /dev/null; do
         sleep 1;
-      done && echo 'User Service is up');
-      npm run db:init && npm run db:seed:all &&
-      /bin/bash -c 'cd scripts && echo Running script && node psqlFunction.js' && 
+      done && echo 'User Service is up');  
+      npm run db:init || echo 'db:init failed';
+      npm run db:seed:all;
+      /bin/bash -c 'cd scripts && echo Running script && node psqlFunction.js' &&
       (echo 'Running nodeee' && node app.js &) &&
-      (while ! curl -sSf http://mentoring:3000 > /dev/null; do
+      (while ! curl -sSf http://mentoring:3033 > /dev/null; do
         sleep 1;
       done && echo 'Service is up' &&
       /bin/bash -c 'cd scripts && echo Running script && node viewsScript.js && node -r module-alias/register sessionUploadScript.js');
+      npm run db:init;
       tail -f /dev/null"
     depends_on:
       kafka:
@@ -92,6 +94,8 @@ services:
       - mentored_net
     env_file:
       - ${mentoring_env}
+    volumes:
+      - ${MENTORING_CONFIG_FILE:?MENTORING_CONFIG_FILE is not set}:/var/src/config.json:ro
 
   user:
     image: shikshalokamqa/elevate-user:3.3.24
@@ -185,22 +189,39 @@ services:
     env_file:
       - ${interface_env}
   chat_communication:
-    # Update with latest image
     image: shikshalokamqa/elevate-chat-communication-service:3.2
     ports:
       - "3123:3123"
-    command: ["node", "app.js"]
+    command: >
+      bash -c "
+      echo 'Waiting for PostgreSQL on citus_master:5432...';
+
+      while ! timeout 1 bash -c 'cat < /dev/null > /dev/tcp/citus_master/5432' 2>/dev/null; do
+        echo 'Waiting for citus_master to be ready...';
+        sleep 60;
+      done;
+
+      echo 'Database is ready.';
+
+      npm run db:init && npm run db:seed:all ;
+
+      echo 'Starting chat communication service...';
+      node app.js &
+      echo 'Service is up';
+      tail -f /dev/null
+      "
     networks:
       - mentored_net
     env_file:
       - ${chatcommunication_env}
+
   citus:
     image: citusdata/citus:11.2.0
     container_name: "citus_master"
-    #ports:
-    #  - 5432:5432
-    expose:
-      - 5432
+    ports:
+     - 5432:5432
+    # expose:
+    #   - 5432
     environment: &AUTH
       POSTGRES_USER: "${POSTGRES_USER:-postgres}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
@@ -220,10 +241,10 @@ services:
     #  - citus-data:/var/lib/postgresql/data
   pgadmin:
     image: dpage/pgadmin4
-    container_name: elevate-pgadmin
+    container_name: elevate-pgadmin-1
     restart: always
     ports:
-      - "5500:80"
+      - "5501:80"
     environment:
       - PGADMIN_DEFAULT_EMAIL=user@shikshalokam.org
       - PGADMIN_DEFAULT_PASSWORD=password
@@ -241,6 +262,21 @@ services:
       - ./env.js:/usr/src/app/www/assets/env/env.js
     networks:
       - mentored_net
+  elevate-portal:
+    image: siddhishinde/shikshagraha:qa-k9s-v2
+    container_name: shikshagraha-app
+    environment:
+      NODE_ENV: production
+
+    # Equivalent of envFrom: configMapRef
+    env_file:
+       - ${elevate_portal_env}
+
+    ports:
+      - "3000:3000"
+      - "4300:4300"
+      - "4301:4301"
+      - "4108:4108"
 
 networks:
   mentored_net:

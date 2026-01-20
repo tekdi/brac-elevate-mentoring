@@ -6,6 +6,9 @@ set "interface_env=%cd%\interface_env"
 set "scheduler_env=%cd%\scheduler_env"
 set "notification_env=%cd%\notification_env"
 set "mentoring_env=%cd%\mentoring_env"
+set "chatcommunication_env=%cd%\chatcommunication_env"
+set "MENTORING_CONFIG_FILE=%cd%\config.json"
+set "elevate_portal_env=%cd%\elevate_portal_env"
 
 rem Run docker-compose
 docker-compose -f docker-compose-mentoring.yml up -d
