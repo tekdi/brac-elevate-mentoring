@@ -2725,9 +2725,11 @@ module.exports = class SessionsHelper {
 	 * @param {String} sessionId - session id.
 	 * @returns {Object} - session data with tenant_code.
 	 */
-	static async getSessionTenantCode(sessionId, tenantCode) {
+	static async getSessionTenantCode(sessionId) {
 		try {
-			return await sessionQueries.findSessionForPublicEndpoint(sessionId, tenantCode)
+			// Use specialized query that does NOT require tenant_code.
+			// This is critical for BBB callbacks which do not send auth tokens or tenantCode.
+			return await sessionQueries.getSessionTenantCode(sessionId)
 		} catch (error) {
 			throw error
 		}
