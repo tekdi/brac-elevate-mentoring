@@ -10,6 +10,8 @@ export mentoring_env="$SCRIPT_DIR/mentoring_env"
 export users_env="$SCRIPT_DIR/user_env"
 export interface_env="$SCRIPT_DIR/interface_env"
 export chatcommunication_env="$SCRIPT_DIR/chatcommunication_env"
+export MENTORING_CONFIG_FILE="$SCRIPT_DIR/config.json"
+export elevate_portal_env="$SCRIPT_DIR/elevate_portal_env"
 
 # Run docker-compose
 docker-compose -f "$SCRIPT_DIR/docker-compose-mentoring.yml" down
