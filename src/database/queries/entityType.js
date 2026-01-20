@@ -71,7 +71,7 @@ module.exports = class UserEntityData {
 				const entityFilter = {
 					entity_type_id: entityTypeIds,
 					status: 'ACTIVE',
-					tenant_code: tenantCodes, // Shorthand: array automatically uses Op.in
+					tenant_code: tenantCodes,
 				}
 
 				entities = await Entity.findAll({
