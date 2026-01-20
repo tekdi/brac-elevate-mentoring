@@ -169,7 +169,7 @@ module.exports = class AdminService {
 			let result = {}
 
 			// Step 1: Fetch user details
-			const getUserDetails = await menteeQueries.getUsersByUserIds([userId], {}, tenantCode, false) // userId = "1"
+			const getUserDetails = await menteeQueries.getUsersByUserIds([userId], {}, tenantCode) // userId = "1"
 
 			if (!getUserDetails || getUserDetails.length === 0) {
 				return responses.failureResponse({
@@ -240,8 +240,7 @@ module.exports = class AdminService {
 					{
 						attributes: ['user_id', 'name', 'email'],
 					},
-					tenantCode,
-					false
+					tenantCode
 				)
 
 				// Soft delete in communication service - handle invalid-users gracefully
@@ -1085,16 +1084,14 @@ module.exports = class AdminService {
 						{
 							attributes: ['user_id', 'name', 'email'],
 						},
-						tenantCode,
-						false
+						tenantCode
 				  )
 				: await userExtensionQueries.getUsersByUserIds(
 						mentorIds,
 						{
 							attributes: ['user_id', 'name', 'email'],
 						},
-						tenantCode,
-						false
+						tenantCode
 				  )
 
 			return mentors || []
@@ -1343,8 +1340,7 @@ module.exports = class AdminService {
 				{
 					attributes: ['user_id', 'name', 'email'],
 				},
-				tenantCode,
-				false
+				tenantCode
 			)
 
 			return mentees || []
@@ -1444,8 +1440,7 @@ module.exports = class AdminService {
 					{
 						attributes: ['name', 'email'],
 					},
-					tenantCodes[0],
-					false
+					tenantCodes[0]
 				)
 
 				if (menteeDetails.length > 0) {
@@ -1495,8 +1490,7 @@ module.exports = class AdminService {
 					{
 						attributes: ['name', 'email'],
 					},
-					tenantCodes[0],
-					false
+					tenantCodes[0]
 				)
 
 				if (managerDetails.length > 0) {
@@ -1553,8 +1547,7 @@ module.exports = class AdminService {
 					{
 						attributes: ['name', 'email'],
 					},
-					tenantCodes[0],
-					false
+					tenantCodes[0]
 				)
 
 				if (managerDetails.length > 0) {
@@ -1614,8 +1607,7 @@ module.exports = class AdminService {
 					{
 						attributes: ['name', 'email'],
 					},
-					tenantCode,
-					false
+					tenantCode
 				)
 
 				if (attendeeDetails.length > 0) {
