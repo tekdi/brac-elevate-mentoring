@@ -597,7 +597,8 @@ module.exports = class MenteesHelper {
 				}
 
 				if (!shouldRegenerateLink) {
-					meetingInfo = sessionWithAttendee.meeting_info
+					// Use the validated attendee_meeting_info that was checked above
+					meetingInfo = sessionAttendeeExist.meeting_info
 				}
 			} else {
 				shouldRegenerateLink = true
