@@ -1734,13 +1734,18 @@ module.exports = class MenteesHelper {
 			// Step 5: Process entity types to add value/label pairs for designation, area_of_expertise, etc.
 			if (extensionDetails.data.length > 0) {
 				try {
-					// Extract unique organization codes from the data
+					// Extract unique organization codes (fallback to org IDs if codes are incomplete)
 					const organizationCodes = uniqueOrgs.map((org) => org.organization_code).filter(Boolean)
+					const organizationIds = uniqueOrgs.map((org) => org.organization_id).filter(Boolean)
+					const useOrgCodes = organizationCodes.length === uniqueOrgs.length && organizationCodes.length > 0
+					const orgKeys = useOrgCodes ? organizationCodes : organizationIds
+					const orgField = useOrgCodes ? 'organization_code' : 'organization_id'
+
 					const processedData = await entityTypeService.processEntityTypesToAddValueLabels(
 						extensionDetails.data,
-						organizationCodes,
+						orgKeys,
 						userExtensionModelName,
-						'organization_code',
+						orgField,
 						[],
 						[tenantCode]
 					)
