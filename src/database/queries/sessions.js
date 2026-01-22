@@ -902,7 +902,7 @@ exports.getMentorsUpcomingSessionsFromView = async (
 		FROM
 				${utils.getTenantViewName(tenantCode, Session.tableName)} as Sessions
 				LEFT JOIN session_attendees AS sa
-				ON Sessions.id = sa.session_id AND sa.tenant_code = :tenantCode
+				ON Sessions.id = sa.session_id AND sa.mentee_id = :menteeUserId AND sa.tenant_code = :tenantCode
 		WHERE
 			mentor_id = :mentorId
 				AND status = 'PUBLISHED'
@@ -948,7 +948,7 @@ exports.getMentorsUpcomingSessionsFromView = async (
 		FROM
 		${utils.getTenantViewName(tenantCode, Session.tableName)} as Sessions
 		LEFT JOIN session_attendees AS sa
-				ON Sessions.id = sa.session_id AND sa.tenant_code = :tenantCode
+				ON Sessions.id = sa.session_id AND sa.mentee_id = :menteeUserId  AND sa.tenant_code = :tenantCode
 		WHERE
 			mentor_id = :mentorId
 				AND status = 'PUBLISHED'
