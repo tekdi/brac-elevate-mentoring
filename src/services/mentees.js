@@ -1517,6 +1517,13 @@ module.exports = class MenteesHelper {
 			}
 			let organization_ids = []
 
+			// Parse organization codes from query parameters
+			let organization_codes = []
+			if (queryParams.hasOwnProperty('organization_ids')) {
+				organization_codes = queryParams['organization_ids'].split(',')
+			}
+
+			// Extract sort parameters
 			const [sortBy, order] = ['name'].includes(queryParams.sort_by)
 				? [queryParams.sort_by, queryParams.order || 'ASC']
 				: [false, 'ASC']
@@ -1704,7 +1711,8 @@ module.exports = class MenteesHelper {
 						// Keep original data if processing fails
 					}
 				} catch (entityError) {
-					// Keep original data if processing fails
+					console.error('Error processing entity types:', entityError)
+					throw entityError
 				}
 			}
 
@@ -1743,7 +1751,7 @@ module.exports = class MenteesHelper {
 			throw error
 		}
 	}
-	static async filterMenteeListBasedOnSaasPolicy(userId, isAMentor, organization_ids = [], tenantCode, orgCode) {
+	static async filterMenteeListBasedOnSaasPolicy(userId, isAMentor, organizationCodes = [], tenantCode, orgCode) {
 		try {
 			// let extensionColumns = isAMentor ? await mentorQueries.getColumns() : await menteeQueries.getColumns()
 			// // check for external_mentee_visibility else fetch external_mentor_visibility
@@ -1807,12 +1815,19 @@ module.exports = class MenteesHelper {
 			}
 
 			let filter = ''
-			// searching for specific organization
-			let additionalFilter = ``
-			if (organization_ids.length !== 0) {
-				additionalFilter = `AND "organization_id" in (${organization_ids.map((id) => `'${id}'`).join(',')}) `
+			let additionalFilter = ''
+
+			if (organizationCodes.length !== 0) {
+				additionalFilter = `AND "organization_code" in (${organizationCodes
+					.map((code) => `'${code}'`)
+					.join(',')}) `
 			}
-			if (getOrgPolicy.external_mentee_visibility_policy && userPolicyDetails.organization_id) {
+			const requesterOrgCode = userPolicyDetails.organization_code
+			const requesterOrgId = userPolicyDetails.organization_id
+
+			// Important: visible_to_organizations stores organization IDs (from related_orgs), not codes
+			// So we must use organization_id when checking visible_to_organizations
+			if (getOrgPolicy?.external_mentee_visibility_policy && requesterOrgCode && requesterOrgId) {
 				const visibilityPolicy = getOrgPolicy.external_mentee_visibility_policy
 
 				// Filter user data based on policy
@@ -1822,7 +1837,7 @@ module.exports = class MenteesHelper {
 					 * if user external_mentor_visibility is current. He can only see his/her organizations mentors
 					 * so we will check mentor's organization_id and user organization_id are matching
 					 */
-					filter = `AND "organization_id" = '${userPolicyDetails.organization_id}'`
+					filter = `AND "organization_code" = '${requesterOrgCode}'`
 				} else if (visibilityPolicy === common.ASSOCIATED) {
 					/**
 					 * If user external_mentor_visibility is associated

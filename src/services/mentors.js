@@ -1278,7 +1278,7 @@ module.exports = class MentorsHelper {
 				if (queryParams.hasOwnProperty(key) & ((key === 'email') | (key === 'name'))) {
 					userServiceQueries[key] = queryParams[key]
 				}
-				if (queryParams.hasOwnProperty(key) & (key === 'organization_codes')) {
+				if (queryParams.hasOwnProperty(key) & (key === 'organization_ids')) {
 					organization_codes = queryParams[key].split(',')
 				}
 

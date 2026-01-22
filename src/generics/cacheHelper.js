@@ -568,10 +568,12 @@ const entityTypes = {
 				const userFilter = {
 					status: 'ACTIVE',
 					organization_code: orgCode,
-					model_names: { [Op.contains]: [modelName] },
-					value: entityValue,
+					model_names: { [Op.contains]: modelName },
 				}
-				const userEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, [tenantCode])
+				if (entityValue) {
+					userFilter.value = entityValue
+				}
+				const userEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, tenantCode)
 				if (userEntityTypes && userEntityTypes.length > 0) {
 					entityTypeFromDb.push(...userEntityTypes)
 					console.log(
@@ -593,12 +595,15 @@ const entityTypes = {
 					const defaultFilter = {
 						status: 'ACTIVE',
 						organization_code: defaults.orgCode,
-						model_names: { [Op.contains]: [modelName] },
-						value: entityValue,
+						model_names: { [Op.contains]: modelName },
 					}
-					const defaultEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(defaultFilter, [
-						defaults.tenantCode,
-					])
+					if (entityValue) {
+						defaultFilter.value = entityValue
+					}
+					const defaultEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(
+						defaultFilter,
+						defaults.tenantCode
+					)
 					if (defaultEntityTypes && defaultEntityTypes.length > 0) {
 						// Merge defaults, avoiding duplicates by ID
 						const existingIds = new Set(entityTypeFromDb.map((et) => et.id))

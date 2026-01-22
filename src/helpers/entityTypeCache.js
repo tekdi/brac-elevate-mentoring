@@ -226,12 +226,13 @@ async function getEntityTypesAndEntitiesForModel(modelName, tenantCode, orgCode,
 		}
 
 		// Try to get known entity types from cache first using user codes
-		const knownEntityValues = common.entityTypeModelNames // Common model names
+		const entityValues =
+			additionalFilters.value && additionalFilters.value[Op.in] ? additionalFilters.value[Op.in] : []
 		const cachedEntities = []
 
 		try {
 			// Check cache for each entity value using user codes only
-			for (const entityValue of knownEntityValues) {
+			for (const entityValue of entityValues) {
 				try {
 					const cachedEntity = await cacheHelper.entityTypes.get(tenantCode, orgCode, modelName, entityValue)
 
@@ -268,7 +269,10 @@ async function getEntityTypesAndEntitiesForModel(modelName, tenantCode, orgCode,
 
 				return formattedCachedEntities
 			}
-		} catch (cacheError) {}
+		} catch (cacheError) {
+			console.error(`Entity type cache read failed (cache+DB): ${cacheError.message}`, cacheError)
+			throw cacheError
+		}
 
 		// Cache miss - fetch from database with user-centric approach
 
@@ -278,9 +282,9 @@ async function getEntityTypesAndEntitiesForModel(modelName, tenantCode, orgCode,
 			const userFilter = {
 				status: 'ACTIVE',
 				organization_code: orgCode,
-				model_names: { [Op.contains]: [modelName] },
+				model_names: { [Op.contains]: modelName },
 			}
-			const userEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, [tenantCode])
+			const userEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, tenantCode)
 			if (userEntityTypes && userEntityTypes.length > 0) {
 				allEntityTypes.push(...userEntityTypes)
 			}
@@ -296,9 +300,10 @@ async function getEntityTypesAndEntitiesForModel(modelName, tenantCode, orgCode,
 					organization_code: defaults.orgCode,
 					model_names: { [Op.contains]: [modelName] },
 				}
-				const defaultEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(defaultFilter, [
-					defaults.tenantCode,
-				])
+				const defaultEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(
+					defaultFilter,
+					defaults.tenantCode
+				)
 				if (defaultEntityTypes && defaultEntityTypes.length > 0) {
 					// Merge defaults, avoiding duplicates by ID
 					const existingIds = new Set(allEntityTypes.map((et) => et.id))
