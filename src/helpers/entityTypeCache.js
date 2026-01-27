@@ -282,9 +282,9 @@ async function getEntityTypesAndEntitiesForModel(modelName, tenantCode, orgCode,
 			const userFilter = {
 				status: 'ACTIVE',
 				organization_code: orgCode,
-				model_names: { [Op.contains]: modelName },
+				model_names: { [Op.contains]: [modelName] },
 			}
-			const userEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, tenantCode)
+			const userEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(userFilter, [tenantCode])
 			if (userEntityTypes && userEntityTypes.length > 0) {
 				allEntityTypes.push(...userEntityTypes)
 			}
@@ -300,10 +300,9 @@ async function getEntityTypesAndEntitiesForModel(modelName, tenantCode, orgCode,
 					organization_code: defaults.orgCode,
 					model_names: { [Op.contains]: [modelName] },
 				}
-				const defaultEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(
-					defaultFilter,
-					defaults.tenantCode
-				)
+				const defaultEntityTypes = await entityTypeQueries.findUserEntityTypesAndEntities(defaultFilter, [
+					defaults.tenantCode,
+				])
 				if (defaultEntityTypes && defaultEntityTypes.length > 0) {
 					// Merge defaults, avoiding duplicates by ID
 					const existingIds = new Set(allEntityTypes.map((et) => et.id))
