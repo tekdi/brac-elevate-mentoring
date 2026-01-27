@@ -123,8 +123,10 @@ module.exports = class UserHelper {
 
 	static async add(bodyData, userId, organizationId, tenantCode) {
 		bodyData.id = bodyData.id.toString()
+
 		let result = {}
 		const isNewUser = await this.#checkUserExistence(bodyData.id, tenantCode)
+
 		if (isNewUser) {
 			result = await this.#createUserWithBody(bodyData, tenantCode)
 		} else {
@@ -132,6 +134,7 @@ module.exports = class UserHelper {
 			const targetHasMentorRole = bodyData.new_roles.some((role) => role.title === common.MENTOR_ROLE)
 			result = await this.#createOrUpdateUserAndOrg(bodyData.id, isNewUser, targetHasMentorRole)
 		}
+
 		return result
 	}
 

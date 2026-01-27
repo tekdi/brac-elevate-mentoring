@@ -320,7 +320,6 @@ module.exports = class SessionsHelper {
 				!userOrgDetails.success ||
 				(userOrgDetails.data && userOrgDetails.data.responseCode === 'UNAUTHORIZED')
 			) {
-				console.log('Skipping organization validation due to permission issue, using local organization data')
 				// Create a mock organization response using the data we have
 				userOrgDetails = {
 					success: true,
@@ -2190,16 +2189,20 @@ module.exports = class SessionsHelper {
 				})
 			}
 
-			// Update seat count (decrease available seats)
-			const seatUpdateResult = await sessionQueries.updateEnrollmentCount(sessionId, false, tenantCode)
-			if (!seatUpdateResult) {
-				// Rollback the enrollment if seat update fails
-				await sessionAttendeesQueries.unEnrollFromSession(sessionId, userId, tenantCode)
-				return responses.failureResponse({
-					message: 'FAILED_TO_UPDATE_SEAT_COUNT',
-					statusCode: httpStatusCode.internal_server_error,
-					responseCode: 'SERVER_ERROR',
-				})
+			// Update seat count (decrease available seats) - only if user is not the session creator
+			let seatsUpdated = false
+			if (session.created_by !== userId) {
+				const seatUpdateResult = await sessionQueries.updateEnrollmentCount(sessionId, false, tenantCode)
+				if (!seatUpdateResult) {
+					// Rollback the enrollment if seat update fails
+					await sessionAttendeesQueries.unEnrollFromSession(sessionId, userId, tenantCode)
+					return responses.failureResponse({
+						message: 'FAILED_TO_UPDATE_SEAT_COUNT',
+						statusCode: httpStatusCode.internal_server_error,
+						responseCode: 'SERVER_ERROR',
+					})
+				}
+				seatsUpdated = true
 			}
 
 			const templateData = await cacheHelper.notificationTemplates.get(tenantCode, orgCode, emailTemplateCode)
@@ -2236,8 +2239,14 @@ module.exports = class SessionsHelper {
 				// Cache invalidation failure - continue operation
 			}
 
-			// Clear user cache since sessions_attended count changed
-			await this._clearUserCache(userId, tenantCode)
+			// Clear user cache when:
+			// 1. Enrollment is created (sessions_attended count changes)
+			// 2. Seats are updated (seats_remaining changes, affecting session data)
+			// Note: seatsUpdated is true when seats are decremented (user is not session creator)
+			// Even if user is session creator, we clear cache when enrollment is created
+			if (enrollmentResult.created || seatsUpdated) {
+				await this._clearUserCache(userId, tenantCode)
+			}
 
 			return responses.successResponse({
 				statusCode: httpStatusCode.created,
@@ -2382,6 +2391,7 @@ module.exports = class SessionsHelper {
 			}
 
 			// Clear user cache since sessions_attended count changed
+			// Note: deletedRows > 0 is guaranteed here since we return early if deletedRows === 0
 			await this._clearUserCache(userId, tenantCode)
 
 			return responses.successResponse({

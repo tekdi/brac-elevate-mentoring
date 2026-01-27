@@ -12,7 +12,6 @@ const sessionService = require('@services/sessions')
 const ProjectRootDir = path.join(__dirname, '../')
 const fileUploadQueries = require('@database/queries/fileUpload')
 const kafkaCommunication = require('@generics/kafka-communication')
-const { getDefaults } = require('@helpers/getDefaultOrgId')
 const sessionQueries = require('@database/queries/sessions')
 const entityTypeCache = require('@helpers/entityTypeCache')
 const { Op } = require('sequelize')
@@ -25,6 +24,9 @@ const cacheHelper = require('@generics/cacheHelper')
 module.exports = class UserInviteHelper {
 	static async uploadSession(data) {
 		return new Promise(async (resolve, reject) => {
+			const startTime = Date.now()
+			const jobId = `${data.fileDetails.id}_${startTime}`
+
 			try {
 				const filePath = data.fileDetails.input_path
 				const userId = data.user.userId
@@ -33,21 +35,46 @@ module.exports = class UserInviteHelper {
 				const notifyUser = true
 				const tenantCode = data.user.tenant_code
 				const orgCode = String(data.user.organization_code)
-				const defaultOrgCode = data.user.defaultOrganiztionCode
-				const defaultTenantCode = data.user.defaultTenantCode
 
-				const mentor = await cacheHelper.mentee.get(tenantCode, userId)
-				if (!mentor) throw new Error('USER_NOT_FOUND')
+				// Try to get user from both mentee and mentor caches
+				let user = await cacheHelper.mentee.get(tenantCode, userId)
+				if (!user) {
+					user = await cacheHelper.mentor.get(tenantCode, userId)
+				}
+				if (!user) {
+					throw new Error('USER_NOT_FOUND')
+				}
 
-				const isMentor = mentor.is_mentor
+				// If email is missing from cache, get fresh user data with email from database
+				let userWithEmail = user
+				if (!user.email) {
+					// Explicitly request email field and don't use cache
+					userWithEmail = await menteeExtensionQueries.getMenteeExtension(
+						userId,
+						['user_id', 'name', 'email', 'is_mentor', 'organization_code', 'tenant_code'],
+						false,
+						tenantCode
+					)
+
+					// Update the user object with email for later use if found
+					if (userWithEmail?.email) {
+						user.email = userWithEmail.email
+					}
+				}
+
+				const isMentor = user.is_mentor
 
 				// download file to local directory
 				const response = await this.downloadCSV(filePath)
-				if (!response.success) throw new Error('FAILED_TO_DOWNLOAD')
+				if (!response.success) {
+					throw new Error('FAILED_TO_DOWNLOAD')
+				}
 
 				// extract data from csv
 				const parsedFileData = await this.extractDataFromCSV(response.result.downloadPath)
-				if (!parsedFileData.success) throw new Error('FAILED_TO_READ_CSV')
+				if (!parsedFileData.success) {
+					throw new Error('FAILED_TO_READ_CSV')
+				}
 				const invitees = parsedFileData.result.data
 
 				// create outPut file and create invites
@@ -59,38 +86,51 @@ module.exports = class UserInviteHelper {
 					notifyUser,
 					isMentor,
 					tenantCode,
-					orgCode,
-					defaultOrgCode,
-					defaultTenantCode
+					orgCode
 				)
-				if (createResponse.success == false) console.log(':::::::::', createResponse.message)
+
+				if (createResponse.success == false) {
+					throw new Error(createResponse.message)
+				}
+
 				const outputFilename = path.basename(createResponse.result.outputFilePath)
+
 				// upload output file to cloud
-				const uploadRes = await uploadToCloud.uploadFileToCloud(outputFilename, inviteeFileDir, userId, orgId)
+				const uploadRes = await uploadToCloud.uploadFileToCloud(
+					outputFilename,
+					inviteeFileDir,
+					userId,
+					orgId,
+					tenantCode
+				)
 				const output_path = uploadRes.result.uploadDest
+
+				const finalStatus =
+					createResponse.result.isErrorOccured == true ? common.STATUS.FAILED : common.STATUS.PROCESSED
 				const update = {
 					output_path,
 					updated_by: userId,
-					status:
-						createResponse.result.isErrorOccured == true ? common.STATUS.FAILED : common.STATUS.PROCESSED,
+					status: finalStatus,
 				}
+
 				//update output path in file uploads
-				const rowsAffected = await fileUploadQueries.update(
-					{ id: data.fileDetails.id, organization_id: orgId },
-					tenantCode,
-					update
-				)
-				if (rowsAffected === 0) {
-					throw new Error('FILE_UPLOAD_MODIFY_ERROR')
+				try {
+					const rowsAffected = await fileUploadQueries.update(
+						{ id: data.fileDetails.id, organization_id: String(orgId) },
+						tenantCode,
+						update
+					)
+
+					if (rowsAffected === 0) {
+						throw new Error('FILE_UPLOAD_MODIFY_ERROR')
+					}
+				} catch (dbError) {
+					throw new Error('DATABASE_UPDATE_ERROR: ' + (dbError.message || dbError))
 				}
 
 				// send email to admin
 				const templateCode = process.env.SESSION_UPLOAD_EMAIL_TEMPLATE_CODE
 				if (templateCode) {
-					const defaults = await getDefaults()
-					if (!defaults.orgCode) throw new Error('DEFAULT_ORG_CODE_NOT_SET')
-					if (!defaults.tenantCode) throw new Error('DEFAULT_TENANT_CODE_NOT_SET')
-
 					// send mail to mentors on session creation if session created by manager
 					const templateData = await cacheHelper.notificationTemplates.get(
 						tenantCode,
@@ -99,8 +139,18 @@ module.exports = class UserInviteHelper {
 					)
 
 					if (templateData) {
+						// Use the email we retrieved earlier, fallback to data.user.email
+						const emailToUse = userWithEmail?.email || user?.email || data.user.email
+
+						// Prepare user data with correct email
+						const userDataForEmail = {
+							...data.user,
+							email: emailToUse,
+							name: userWithEmail?.name || user?.name || data.user.name,
+						}
+
 						const sessionUploadURL = await utils.getDownloadableUrl(output_path)
-						await this.sendSessionManagerEmail(templateData, data.user, sessionUploadURL) //Rename this to function to generic name since this function is used for both Invitee & Org-admin.
+						await this.sendSessionManagerEmail(templateData, userDataForEmail, sessionUploadURL) //Rename this to function to generic name since this function is used for both Invitee & Org-admin.
 					}
 				}
 
@@ -113,7 +163,6 @@ module.exports = class UserInviteHelper {
 					message: 'CSV_UPLOADED_SUCCESSFULLY',
 				})
 			} catch (error) {
-				console.log(error, 'CSV PROCESSING ERROR')
 				return reject({
 					success: false,
 					message: error.message,
@@ -125,6 +174,7 @@ module.exports = class UserInviteHelper {
 	static async downloadCSV(filePath) {
 		try {
 			const downloadableUrl = await utils.getDownloadableUrl(filePath)
+
 			let fileName = path.basename(downloadableUrl)
 
 			// Find the index of the first occurrence of '?'
@@ -132,6 +182,7 @@ module.exports = class UserInviteHelper {
 			// Extract the portion of the string before the '?' if it exists, otherwise use the entire string
 			fileName = index !== -1 ? fileName.substring(0, index) : fileName
 			const downloadPath = path.join(inviteeFileDir, fileName)
+
 			const response = await axios.get(downloadableUrl, {
 				responseType: common.responseType,
 			})
@@ -140,11 +191,15 @@ module.exports = class UserInviteHelper {
 			response.data.pipe(writeStream)
 
 			await new Promise((resolve, reject) => {
-				writeStream.on('finish', resolve)
+				writeStream.on('finish', () => {
+					resolve()
+				})
 				writeStream.on('error', (err) => {
 					reject(new Error('FAILED_TO_DOWNLOAD_FILE'))
 				})
 			})
+
+			const stats = fs.statSync(downloadPath)
 
 			return {
 				success: true,
@@ -174,6 +229,7 @@ module.exports = class UserInviteHelper {
 	static async extractDataFromCSV(csvFilePath) {
 		try {
 			const parsedCSVData = []
+
 			let csvToJsonData = await csv().fromFile(csvFilePath)
 
 			// Filter out empty rows
@@ -390,6 +446,7 @@ module.exports = class UserInviteHelper {
 					await validateMeetingLink()
 				}
 			}
+
 			return {
 				success: true,
 				result: { data: parsedCSVData },
@@ -562,21 +619,13 @@ module.exports = class UserInviteHelper {
 
 			const sessionModelName = await sessionQueries.getModelName()
 
-			const defaults = await getDefaults()
-			if (!defaults.orgCode) {
-				session.status = 'Invalid'
-				session.statusMessage = this.appendWithComma(session.statusMessage, 'DEFAULT_ORG_CODE_NOT_SET')
-			}
-			if (!defaults.tenantCode) {
-				session.status = 'Invalid'
-				session.statusMessage = this.appendWithComma(session.statusMessage, 'DEFAULT_TENANT_CODE_NOT_SET')
-			}
-
+			// Get entity types (entityTypeCache already handles user org + default org merging)
 			let entityTypes = await entityTypeCache.getEntityTypesAndEntitiesForModel(
 				sessionModelName,
 				tenantCode,
 				orgCode
 			)
+
 			const idAndValues = entityTypes.map((item) => ({
 				value: item.value,
 				entities: item.entities,
@@ -721,9 +770,7 @@ module.exports = class UserInviteHelper {
 		notifyUser,
 		isMentor,
 		tenantCode,
-		orgCode,
-		defaultOrgCode,
-		defaultTenantCode
+		orgCode
 	) {
 		try {
 			const outputFileName = utils.generateFileName(common.sessionOutputFile, common.csvExtension)
@@ -827,11 +874,13 @@ module.exports = class UserInviteHelper {
 
 			const sessionModelName = await sessionQueries.getModelName()
 
+			// Get entity types (entityTypeCache already handles user org + default org merging)
 			let entityTypes = await entityTypeCache.getEntityTypesAndEntitiesForModel(
 				sessionModelName,
 				tenantCode,
 				orgCode
 			)
+
 			const idAndValues = entityTypes.map((item) => ({
 				value: item.value,
 				entities: item.entities,
@@ -1066,14 +1115,27 @@ module.exports = class UserInviteHelper {
 		for (const item of sessionCreationOutput) {
 			const mentorIdPromise = item.mentor_id
 			if (!isNaN(mentorIdPromise) && mentorIdPromise) {
-				const mentorId = await menteeExtensionQueries.getMenteeExtension(
-					mentorIdPromise,
-					['email'],
-					false,
-					tenantCode
-				)
-				if (!mentorId) throw new Error('USER_NOT_FOUND')
-				item.mentor_id = mentorId.email
+				try {
+					const mentorId = await menteeExtensionQueries.getMenteeExtension(
+						mentorIdPromise,
+						['email'],
+						false,
+						tenantCode
+					)
+					if (!mentorId) {
+						// Mark item as invalid instead of throwing error
+						item.status = 'Invalid'
+						item.statusMessage = this.appendWithComma(item.statusMessage, 'Mentor not found')
+						item.mentor_id = mentorIdPromise // Keep original ID for reference
+					} else {
+						item.mentor_id = mentorId.email
+					}
+				} catch (dbError) {
+					// Handle database errors gracefully
+					item.status = 'Invalid'
+					item.statusMessage = this.appendWithComma(item.statusMessage, 'Mentor not found')
+					item.mentor_id = mentorIdPromise // Keep original ID for reference
+				}
 			} else {
 				item.mentor_id = item.mentor_id
 			}
@@ -1089,8 +1151,11 @@ module.exports = class UserInviteHelper {
 							false,
 							tenantCode
 						)
-						if (!mentee) throw new Error('USER_NOT_FOUND')
-						menteeEmails.push(mentee.email)
+						if (!mentee) {
+							// Skip missing mentee and continue processing the rest
+						} else {
+							menteeEmails.push(mentee.email)
+						}
 					} else {
 						menteeEmails.push(menteeId)
 					}

@@ -186,7 +186,6 @@ module.exports = class requestSessionsHelper {
 				result: SessionRequestResult,
 			})
 		} catch (error) {
-			console.error(error)
 			throw error
 		}
 	}
@@ -316,7 +315,6 @@ module.exports = class requestSessionsHelper {
 				},
 			})
 		} catch (error) {
-			console.error(error)
 			throw error
 		}
 	}
@@ -517,12 +515,12 @@ module.exports = class requestSessionsHelper {
 			if (templateCode) {
 				emailForAcceptAndReject(
 					templateCode,
-					{ [Op.in]: [orgCode, defaults.orgCode] },
+					orgCode,
 					getRequestSessionDetails.requestor_id,
 					mentorUserId,
 					'',
-					{ [Op.in]: [tenantCode, defaults.tenantCode] },
-					true
+					tenantCode,
+					false
 				)
 			}
 
@@ -536,7 +534,6 @@ module.exports = class requestSessionsHelper {
 					: undefined,
 			})
 		} catch (error) {
-			console.error(error)
 			throw error
 		}
 	}
@@ -598,7 +595,7 @@ module.exports = class requestSessionsHelper {
 			const templateCode = process.env.MENTOR_REJECT_SESSION_REQUEST_EMAIL_TEMPLATE
 			emailForAcceptAndReject(
 				templateCode,
-				{ [Op.in]: [tenantCode, defaults.tenantCode] },
+				orgCode,
 				rejectedData[0].dataValues.requestor_id,
 				userId,
 				bodyData.reason,
@@ -611,7 +608,6 @@ module.exports = class requestSessionsHelper {
 				message: 'SESSION_REQUEST_REJECTED',
 			})
 		} catch (error) {
-			console.error(error)
 			throw error
 		}
 	}
@@ -706,7 +702,6 @@ module.exports = class requestSessionsHelper {
 				result: requestSessions,
 			})
 		} catch (error) {
-			console.error(error)
 			throw error
 		}
 	}
@@ -786,7 +781,6 @@ module.exports = class requestSessionsHelper {
 				message: 'SESSION_REQUEST_EXPIRED',
 			})
 		} catch (error) {
-			console.error(error)
 			throw error
 		}
 	}

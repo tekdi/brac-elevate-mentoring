@@ -17,6 +17,7 @@ const organizationConsumer = require('@generics/kafka/consumers/organization')
 
 module.exports = async () => {
 	const kafkaIps = process.env.KAFKA_URL.split(',')
+
 	const KafkaClient = new Kafka({
 		clientId: 'mentoring',
 		brokers: kafkaIps,
@@ -37,22 +38,25 @@ module.exports = async () => {
 	global.kafkaProducer = producer
 	global.kafkaClient = KafkaClient
 
-	startConsumer(KafkaClient).catch((err) =>
+	startConsumer(KafkaClient).catch((err) => {
 		logger.error('Kafka consumer failed to start', { err: err?.stack || err?.message })
-	)
+	})
 }
 
 async function startConsumer(kafkaClient) {
 	const consumer = kafkaClient.consumer({ groupId: process.env.KAFKA_GROUP_ID })
 
 	await consumer.connect()
-	await consumer.subscribe({ topics: [process.env.EVENTS_TOPIC, process.env.CLEAR_INTERNAL_CACHE] })
+
+	const topics = [process.env.EVENTS_TOPIC, process.env.CLEAR_INTERNAL_CACHE].filter(Boolean)
+	await consumer.subscribe({ topics })
 
 	await consumer.run({
 		eachMessage: async ({ topic, partition, message }) => {
 			try {
 				const rawValue = message.value?.toString()
 				const offset = message.offset
+
 				if (!rawValue) {
 					logger.warn(`Empty Kafka message skipped on topic ${topic}`)
 					return
@@ -72,6 +76,7 @@ async function startConsumer(kafkaClient) {
 				}
 
 				let response
+
 				if (payload && topic === process.env.EVENTS_TOPIC) {
 					// Handle organization events
 					if (
@@ -102,7 +107,8 @@ async function startConsumer(kafkaClient) {
 						response = await utils.internalDel(payload.value)
 					}
 				}
-				logger.info(`Kafk event handling response : ${response}`)
+
+				logger.info(`Kafka event handling response : ${response}`)
 			} catch (err) {
 				logger.error(`Error in Kafka message handler for topic ${topic}`, {
 					topic,
