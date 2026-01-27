@@ -1,4 +1,5 @@
 const Resources = require('../models/index').Resources
+const Session = require('../models/index').Session
 
 module.exports = class ResourcessData {
 	static async bulkCreate(data, tenantCode) {
@@ -69,27 +70,31 @@ module.exports = class ResourcessData {
 		}
 	}
 
-	static async deleteResourceByIdWithSessionValidation(resourceId, tenantCode) {
+	static async deleteResourceByIdWithSessionValidation(resourceId, sessionId, tenantCode) {
 		try {
-			// Sequelize approach: Find resource with session validation through association
+			// First, find the resource to validate it exists and belongs to the specified session
 			const resource = await Resources.findOne({
-				where: { id: resourceId, tenant_code: tenantCode },
-				include: [
-					{
-						model: Resources.sequelize.models.Sessions,
-						as: 'session',
-						where: { tenant_code: tenantCode },
-						attributes: ['id'], // Only verify session exists
-					},
-				],
+				where: { id: resourceId, session_id: sessionId, tenant_code: tenantCode },
+				attributes: ['id', 'session_id'],
 			})
 
 			if (!resource) {
-				return 0 // No resource found or session invalid
+				return 0 // No resource found or session mismatch
 			}
 
-			await resource.destroy()
-			return 1 // Successfully deleted
+			// Validate that the session exists and belongs to the same tenant
+			const session = await Session.findOne({
+				where: { id: sessionId, tenant_code: tenantCode },
+				attributes: ['id'],
+			})
+			if (!session) {
+				return 0 // Session not found or invalid
+			}
+			// Delete the resource using destroy with where clause for reliable deletion
+			const deletedCount = await Resources.destroy({
+				where: { id: resourceId, session_id: sessionId, tenant_code: tenantCode },
+			})
+			return deletedCount > 0 ? 1 : 0
 		} catch (error) {
 			return error
 		}
