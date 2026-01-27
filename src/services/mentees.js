@@ -1663,6 +1663,13 @@ module.exports = class MenteesHelper {
 			if (extensionDetails.data.length > 0) {
 				try {
 					const organizationCodes = uniqueOrgs.map((org) => org.organization_code).filter(Boolean)
+
+					// DEBUG: Log before processing
+					console.log('🔍 [DEBUG] Before processEntityTypesToAddValueLabels:')
+					console.log('🔍 [DEBUG] organizationCodes:', organizationCodes)
+					console.log('🔍 [DEBUG] tenantCode:', tenantCode)
+					console.log('🔍 [DEBUG] Sample data designation BEFORE:', extensionDetails.data[0]?.designation)
+
 					const processedData = await entityTypeService.processEntityTypesToAddValueLabels(
 						extensionDetails.data,
 						organizationCodes,
@@ -1671,6 +1678,11 @@ module.exports = class MenteesHelper {
 						[],
 						[tenantCode]
 					)
+
+					// DEBUG: Log after processing
+					console.log('🔍 [DEBUG] processedData type:', typeof processedData, Array.isArray(processedData))
+					console.log('🔍 [DEBUG] Sample data designation AFTER:', processedData?.[0]?.designation)
+
 					if (Array.isArray(processedData)) {
 						extensionDetails.data = processedData
 					}
