@@ -410,6 +410,12 @@ module.exports = class EntityHelper {
 			// Use first tenant/org as user context - cache helper handles defaults internally
 			const primaryTenantCode = tenantCodes[0] || defaults.tenantCode
 			const primaryOrgCode = orgCodes[0] || defaults.orgCode
+
+			// DEBUG: Log cache lookup parameters
+			console.log('🔍 [DEBUG] processEntityTypesToAddValueLabels - modelName:', modelName)
+			console.log('🔍 [DEBUG] processEntityTypesToAddValueLabels - primaryTenantCode:', primaryTenantCode)
+			console.log('🔍 [DEBUG] processEntityTypesToAddValueLabels - primaryOrgCode:', primaryOrgCode)
+
 			let entityTypesWithEntities = await entityTypeCache.getEntityTypesAndEntitiesForModel(
 				Array.isArray(modelName) ? modelName[0] : modelName,
 				primaryTenantCode,
@@ -417,7 +423,16 @@ module.exports = class EntityHelper {
 				additionalFilters
 			)
 			entityTypesWithEntities = JSON.parse(JSON.stringify(entityTypesWithEntities))
+
+			// DEBUG: Log fetched entity types
+			console.log('🔍 [DEBUG] entityTypesWithEntities count:', entityTypesWithEntities?.length)
+			console.log(
+				'🔍 [DEBUG] entityTypesWithEntities values:',
+				entityTypesWithEntities?.map((e) => e.value)
+			)
+
 			if (!entityTypesWithEntities.length > 0) {
+				console.log('🔍 [DEBUG] No entity types found, returning original data')
 				return responseData
 			}
 
