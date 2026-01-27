@@ -25,12 +25,16 @@ module.exports = class admin {
 
 	async userDelete(req) {
 		try {
+			// Check if the caller is an admin (allows cross-tenant deletions)
+			const isAdmin = req.decodedToken.roles?.some((role) => role.title === common.ADMIN_ROLE) || false
+
 			const userDelete = await adminService.userDelete(
 				req.query.userId,
 				req.decodedToken.id,
 				req.decodedToken.organization_code,
 				req.decodedToken.tenant_code,
-				req.decodedToken.token
+				req.decodedToken.token,
+				isAdmin
 			)
 			return userDelete
 		} catch (error) {

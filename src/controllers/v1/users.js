@@ -158,12 +158,14 @@ module.exports = class Users {
 
 			// For internal calls, only req.body.id and req.body.tenant_code are available
 			// Other parameters (currentUserId, organizationCode, token) will use defaults
+			// Internal endpoint is admin-only, so pass isAdmin=true
 			return await adminService.userDelete(
 				req.body.id.toString(),
 				null, // currentUserId - not available for internal calls
 				null, // organizationCode - not available for internal calls
-				req.body.tenant_code
-				// token defaults to '' in service method
+				req.body.tenant_code,
+				'', // token defaults to '' in service method
+				true // isAdmin - internal endpoint is admin-only
 			)
 		} catch (error) {
 			return error
