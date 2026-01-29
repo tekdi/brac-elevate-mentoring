@@ -21,7 +21,8 @@ curl -L \
  -O https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/dockerized/envs/env.js \
  -O https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/dockerized/envs/chatcommunication_env \
  -O https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/dockerized/envs/config.json \
- -O https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/dockerized/envs/elevate_portal_env
+ -O https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/dockerized/envs/elevate_portal_env \
+  -O https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/dockerized/envs/entity_management_env
  log "Environment files downloaded."
 
 # Step 3: Download replace_volume_path.sh script

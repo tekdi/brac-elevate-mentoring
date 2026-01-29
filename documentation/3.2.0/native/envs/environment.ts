@@ -18,7 +18,9 @@ export const environment = {
     "errorMessage": "Password should contain at least two uppercase letter, two number and three special character.",
     "minLength": 11,
     "regexPattern": "^(?=(?:.*[A-Z]){2})(?=(?:.*[0-9]){2})(?=(?:.*[!@#%$&()\\-`.+,]){3}).{11,}$",
-    "regexPatternOld": "^(?=(?:.*[A-Z]){2})(?=(?:.*\\d){2})(?=.{11,})(?=(?:.*[\\W_]){3}).*$"
+    "regexPatternOld": "^(?=(?:.*[A-Z]){2})(?=(?:.*\\d){2})(?=.{11,})(?=(?:.*[\\W_]){3}).*$",
+	chatBaseUrl: 'http://localhost:3123.com', 
+    chatWebSocketUrl: 'wss://localhost:3123/websocket'
   },
 }
   

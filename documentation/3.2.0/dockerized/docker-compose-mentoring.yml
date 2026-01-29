@@ -34,6 +34,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+  mongo:
+    image: 'mongo:4.4.14'
+    container_name: mentoring_mongo_1
+    restart: 'always'
+    ports:
+      - '27017:27017'
+    networks:
+      - mentored_net
   redis:
     image: "redis:7.0.0"
     restart: "always"
@@ -262,9 +270,21 @@ services:
       - ./env.js:/usr/src/app/www/assets/env/env.js
     networks:
       - mentored_net
+  entity_management:
+    image: shikshalokamqa/elevate-entity-management:3.3.13.1
+    ports:
+      - '5001:5001'
+    env_file:
+      - ${entity_management_env}
+    depends_on:
+      - mongo
+    volumes:
+      - ${MENTORING_CONFIG_FILE}:/var/src/config.json:ro
+    networks:
+      - mentored_net
   elevate-portal:
     image: siddhishinde/shikshagraha:qa-k9s-v2
-    container_name: shikshagraha-app
+    container_name: elevate-portal-mentoring
     environment:
       NODE_ENV: production
 

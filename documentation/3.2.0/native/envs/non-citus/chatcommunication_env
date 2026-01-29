@@ -1,0 +1,14 @@
+APPLICATION_ENV=development
+APPLICATION_PORT=3123
+CHAT_PLATFORM=rocketchat
+CHAT_PLATFORM_ACCESS_TOKEN="rocket chat api access token"
+CHAT_PLATFORM_ADMIN_EMAIL="rocket chat admin email address" 
+CHAT_PLATFORM_ADMIN_PASSWORD="rocket chat admin password"
+CHAT_PLATFORM_ADMIN_USER_ID="rocket chat admin user id"
+CHAT_PLATFORM_URL="https://chat-dev-temp.elevate-apis.shikshalokam.org"
+DEV_DATABASE_URL="postgres://postgres:password@localhost:5432/"
+INTERNAL_ACCESS_TOKEN="FqHQ0gXydRtBCg5l"
+PASSWORD_HASH_LENGTH=10
+USERNAME_HASH_LENGTH=10
+PASSWORD_HASH_SALT="wRvads&%909$ss" 
+USERNAME_HASH_SALT="wRvadsss33123s&%$"
