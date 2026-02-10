@@ -272,7 +272,7 @@ module.exports = class MenteesHelper {
 	 * @returns {JSON} - List of sessions
 	 */
 
-	static async sessions(userId, page, limit, search = '', organizationId, tenantCode) {
+	static async sessions(userId, page, limit, search = '', tenantCode) {
 		try {
 			/** Upcoming user's enrolled sessions {My sessions}*/
 			/* Fetch sessions if it is not expired or if expired then either status is live or if mentor 
@@ -473,19 +473,27 @@ module.exports = class MenteesHelper {
 						attendee_meeting_info: sessionWithAttendee.meeting_info ?? sessionData.meeting_info,
 					}
 				}
+				// If mentee_password is missing from cache, fetch from database
+				if (!sessionData.mentee_password) {
+					const fullSessionData = await sessionQueries.findOne({ id: sessionId }, tenantCode)
+					if (fullSessionData?.mentee_password) {
+						sessionData.mentee_password = fullSessionData.mentee_password
+					}
+				}
 			} else {
+				// Cache miss: fetch session with attendee in a single query
 				sessionWithAttendee = await sessionQueries.findSessionWithAttendee(
 					sessionId,
 					mentee.user_id,
 					tenantCode
 				)
 
-				sessionData = { ...sessionWithAttendee }
-				// Normalize DB result to match cache structure
 				if (sessionWithAttendee) {
-					sessionWithAttendee.attendee_id = sessionWithAttendee.id
-					sessionWithAttendee.enrolled_type = sessionWithAttendee.enrolled_type || sessionWithAttendee.type
-					sessionWithAttendee.attendee_meeting_info = sessionWithAttendee.meeting_info
+					// Use the same object as sessionData since it already contains full session fields
+					// (including mentee_password, meeting_info, etc.) and attendee fields via attendeeData DTO
+					sessionData = { ...sessionWithAttendee }
+				} else {
+					sessionData = null
 				}
 			}
 
@@ -530,6 +538,7 @@ module.exports = class MenteesHelper {
 					responseCode: 'CLIENT_ERROR',
 				})
 			}
+
 			let meetingInfo
 			if (sessionData?.meeting_info?.value !== common.BBB_VALUE) {
 				meetingInfo = sessionData.meeting_info
@@ -550,12 +559,24 @@ module.exports = class MenteesHelper {
 					result: meetingInfo,
 				})
 			}
+
 			if (sessionAttendeeExist?.meeting_info?.link) {
-				meetingInfo = sessionWithAttendee.meeting_info
+				// Existing BBB attendee link present in DB – just reuse it
+				meetingInfo = sessionAttendeeExist.meeting_info
 			} else {
+				// No existing link – generate a fresh one from BBB and store it
+				if (!sessionData.mentee_password) {
+					return responses.failureResponse({
+						message: 'MENTEE_PASSWORD_NOT_FOUND',
+						statusCode: httpStatusCode.bad_request,
+						responseCode: 'CLIENT_ERROR',
+					})
+				}
+
+				const menteeName = mentee.name || 'Attendee'
 				const attendeeLink = await bigBlueButtonService.joinMeetingAsAttendee(
 					sessionId,
-					mentee.name,
+					menteeName,
 					sessionData.mentee_password
 				)
 				meetingInfo = {
