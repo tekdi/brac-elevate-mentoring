@@ -26,6 +26,13 @@ const userRequests = require('@requests/user')
 const createMeeting = function (meetingId, meetingName, attendeePW, moderatorPW, sessionDuration, tenantUrl) {
 	return new Promise(async (resolve, reject) => {
 		try {
+			console.log('BBB_CREATE_MEETING_REQUEST', {
+				meetingId,
+				meetingName,
+				sessionDuration,
+				tenantUrl,
+			})
+
 			let endMeetingCallBackUrl = process.env.MEETING_END_CALLBACK_EVENTS + '%2F' + meetingId + '%3Fsource%3DBBB'
 
 			const hostname = String(tenantUrl || '')
@@ -61,8 +68,19 @@ const createMeeting = function (meetingId, meetingName, attendeePW, moderatorPW,
 
 			const createUrl = bigBlueButtonUrl + endpoints.CREATE_MEETING + '?' + query + '&checksum=' + checksum
 			let response = await request.get(createUrl)
+
+			console.log('BBB_CREATE_MEETING_RESPONSE', {
+				meetingId,
+				success: response?.success,
+				internalMeetingId: response?.data?.response?.internalMeetingID,
+			})
+
 			return resolve(response)
 		} catch (error) {
+			console.log('BBB_CREATE_MEETING_ERROR', {
+				meetingId,
+				error: error.message,
+			})
 			return reject(error)
 		}
 	})
@@ -79,14 +97,27 @@ const createMeeting = function (meetingId, meetingName, attendeePW, moderatorPW,
 const getRecordings = function (meetingId) {
 	return new Promise(async (resolve, reject) => {
 		try {
+			console.log('BBB_GET_RECORDINGS_REQUEST', { meetingId })
+
 			let checkSumGeneration = 'getRecordingsmeetingID=' + meetingId + process.env.BIG_BLUE_BUTTON_SECRET_KEY
 			const checksum = utils.generateCheckSum(checkSumGeneration)
 
 			const meetingInfoUrl =
 				bigBlueButtonUrl + endpoints.GET_RECORDINGS + '?meetingID=' + meetingId + '&checksum=' + checksum
 			let response = await request.get(meetingInfoUrl)
+
+			console.log('BBB_GET_RECORDINGS_RESPONSE', {
+				meetingId,
+				success: response?.success,
+				hasRecordings: !!response?.data?.response?.recordings,
+			})
+
 			return resolve(response)
 		} catch (error) {
+			console.log('BBB_GET_RECORDINGS_ERROR', {
+				meetingId,
+				error: error.message,
+			})
 			return reject(error)
 		}
 	})
