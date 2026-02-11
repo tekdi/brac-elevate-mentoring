@@ -23,7 +23,15 @@ const userRequests = require('@requests/user')
  * @returns {String} - Meeting success message.
  */
 
-const createMeeting = function (meetingId, meetingName, attendeePW, moderatorPW, sessionDuration, tenantUrl) {
+const createMeeting = function (
+	meetingId,
+	meetingName,
+	attendeePW,
+	moderatorPW,
+	sessionDuration,
+	tenantUrl,
+	tenantCode
+) {
 	return new Promise(async (resolve, reject) => {
 		try {
 			console.log('BBB_CREATE_MEETING_REQUEST', {
@@ -31,9 +39,16 @@ const createMeeting = function (meetingId, meetingName, attendeePW, moderatorPW,
 				meetingName,
 				sessionDuration,
 				tenantUrl,
+				tenantCode,
 			})
 
-			let endMeetingCallBackUrl = process.env.MEETING_END_CALLBACK_EVENTS + '%2F' + meetingId + '%3Fsource%3DBBB'
+			// Include tenantCode in callback URL for session completion
+			let endMeetingCallBackUrl =
+				process.env.MEETING_END_CALLBACK_EVENTS +
+				'%2F' +
+				meetingId +
+				'%3Fsource%3DBBB%26tenantCode%3D' +
+				encodeURIComponent(tenantCode || '')
 
 			const hostname = String(tenantUrl || '')
 				.replace(/^https?:\/\//i, '')
