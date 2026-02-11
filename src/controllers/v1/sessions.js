@@ -254,15 +254,6 @@ module.exports = class Sessions {
 
 			const isBBB = req.query.source == common.BBB_VALUE ? true : false
 
-			console.log('SESSION_COMPLETED_API_HIT', {
-				sessionId: req.params.id,
-				userId: req.decodedToken?.id,
-				tenantCode,
-				orgCode,
-				source: req.query.source,
-				isBBB,
-			})
-
 			const sessionsCompleted = await sessionService.completed(req.params.id, isBBB, tenantCode, orgCode)
 
 			return sessionsCompleted

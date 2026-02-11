@@ -2620,13 +2620,6 @@ module.exports = class SessionsHelper {
 					tenantCode
 				)
 				if (!meetingDetails.success) {
-					console.log('BBB_SESSION_CREATION_FAILED', {
-						sessionId,
-						userId: loggedInUserId,
-						tenantCode,
-						orgCode: session.organization_code,
-						error: 'MEETING_NOT_CREATED',
-					})
 					return responses.failureResponse({
 						message: 'MEETING_NOT_CREATED',
 						statusCode: httpStatusCode.internal_server_error,
@@ -2647,14 +2640,6 @@ module.exports = class SessionsHelper {
 						meeting_id: meetingDetails.data.response.internalMeetingID,
 					},
 				}
-
-				console.log('BBB_SESSION_CREATED', {
-					sessionId,
-					userId: loggedInUserId,
-					tenantCode,
-					orgCode: session.organization_code,
-					meetingId: meetingDetails.data.response.internalMeetingID,
-				})
 
 				await sessionQueries.updateOne(
 					{
@@ -2768,12 +2753,6 @@ module.exports = class SessionsHelper {
 	 */
 
 	static async completed(sessionId, isBBB, tenantCode, orgCode) {
-		console.log('BBB_SESSION_COMPLETED_API_CALLED', {
-			sessionId,
-			isBBB,
-			tenantCode,
-			orgCode,
-		})
 		try {
 			let isSessionCached = false
 			let sessionDetails = await cacheHelper.sessions.get(tenantCode, sessionId)
@@ -2902,13 +2881,6 @@ module.exports = class SessionsHelper {
 			}
 
 			if (sessionDetails?.meeting_info?.value == common.BBB_VALUE && isBBB) {
-				console.log('BBB_SESSION_ENDING', {
-					sessionId,
-					tenantCode,
-					orgCode,
-					mentorId: sessionDetails.mentor_id,
-				})
-
 				const recordingInfo = await bigBlueButtonRequests.getRecordings(sessionId)
 
 				if (recordingInfo?.data?.response) {
@@ -2931,23 +2903,8 @@ module.exports = class SessionsHelper {
 							},
 							tenantCode
 						)
-
-						console.log('BBB_SESSION_RECORDING_SAVED', {
-							sessionId,
-							tenantCode,
-							orgCode,
-							mentorId: sessionDetails.mentor_id,
-							recordingUrl: recordings.recording.playback.format.url,
-						})
 					}
 				}
-
-				console.log('BBB_SESSION_ENDED', {
-					sessionId,
-					tenantCode,
-					orgCode,
-					mentorId: sessionDetails.mentor_id,
-				})
 			}
 
 			return responses.successResponse({
