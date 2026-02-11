@@ -17,7 +17,6 @@ const entityTypeCache = require('@helpers/entityTypeCache')
 const { Op } = require('sequelize')
 const moment = require('moment')
 const inviteeFileDir = ProjectRootDir + common.tempFolderForBulkUpload
-const menteeExtensionQueries = require('@database/queries/userExtension')
 const uploadToCloud = require('@helpers/uploadFileToCloud')
 const cacheHelper = require('@generics/cacheHelper')
 
@@ -36,30 +35,13 @@ module.exports = class UserInviteHelper {
 				const tenantCode = data.user.tenant_code
 				const orgCode = String(data.user.organization_code)
 
-				// Try to get user from both mentee and mentor caches
+				// Try to get user from both mentee and mentor caches (now includes email with unScoped=true)
 				let user = await cacheHelper.mentee.get(tenantCode, userId)
 				if (!user) {
 					user = await cacheHelper.mentor.get(tenantCode, userId)
 				}
 				if (!user) {
 					throw new Error('USER_NOT_FOUND')
-				}
-
-				// If email is missing from cache, get fresh user data with email from database
-				let userWithEmail = user
-				if (!user.email) {
-					// Explicitly request email field and don't use cache
-					userWithEmail = await menteeExtensionQueries.getMenteeExtension(
-						userId,
-						['user_id', 'name', 'email', 'is_mentor', 'organization_code', 'tenant_code'],
-						false,
-						tenantCode
-					)
-
-					// Update the user object with email for later use if found
-					if (userWithEmail?.email) {
-						user.email = userWithEmail.email
-					}
 				}
 
 				const isMentor = user.is_mentor
@@ -139,14 +121,14 @@ module.exports = class UserInviteHelper {
 					)
 
 					if (templateData) {
-						// Use the email we retrieved earlier, fallback to data.user.email
-						const emailToUse = userWithEmail?.email || user?.email || data.user.email
+						// Use email from cache (now available with unScoped=true)
+						const emailToUse = user?.email || data.user.email
 
 						// Prepare user data with correct email
 						const userDataForEmail = {
 							...data.user,
 							email: emailToUse,
-							name: userWithEmail?.name || user?.name || data.user.name,
+							name: user?.name || data.user.name,
 						}
 
 						const sessionUploadURL = await utils.getDownloadableUrl(output_path)
@@ -1116,22 +1098,21 @@ module.exports = class UserInviteHelper {
 			const mentorIdPromise = item.mentor_id
 			if (!isNaN(mentorIdPromise) && mentorIdPromise) {
 				try {
-					const mentorId = await menteeExtensionQueries.getMenteeExtension(
-						mentorIdPromise,
-						['email'],
-						false,
-						tenantCode
-					)
-					if (!mentorId) {
+					// Use cache first (now includes email with unScoped=true), fallback to mentor cache
+					let mentorData = await cacheHelper.mentee.get(tenantCode, mentorIdPromise)
+					if (!mentorData) {
+						mentorData = await cacheHelper.mentor.get(tenantCode, mentorIdPromise)
+					}
+					if (!mentorData || !mentorData.email) {
 						// Mark item as invalid instead of throwing error
 						item.status = 'Invalid'
 						item.statusMessage = this.appendWithComma(item.statusMessage, 'Mentor not found')
 						item.mentor_id = mentorIdPromise // Keep original ID for reference
 					} else {
-						item.mentor_id = mentorId.email
+						item.mentor_id = mentorData.email
 					}
-				} catch (dbError) {
-					// Handle database errors gracefully
+				} catch (cacheError) {
+					// Handle cache/database errors gracefully
 					item.status = 'Invalid'
 					item.statusMessage = this.appendWithComma(item.statusMessage, 'Mentor not found')
 					item.mentor_id = mentorIdPromise // Keep original ID for reference
@@ -1145,17 +1126,15 @@ module.exports = class UserInviteHelper {
 				for (let i = 0; i < item.mentees.length; i++) {
 					const menteeId = item.mentees[i]
 					if (!isNaN(menteeId)) {
-						const mentee = await menteeExtensionQueries.getMenteeExtension(
-							menteeId,
-							['email'],
-							false,
-							tenantCode
-						)
-						if (!mentee) {
-							// Skip missing mentee and continue processing the rest
-						} else {
-							menteeEmails.push(mentee.email)
+						// Use cache (now includes email with unScoped=true)
+						let menteeData = await cacheHelper.mentee.get(tenantCode, menteeId)
+						if (!menteeData) {
+							menteeData = await cacheHelper.mentor.get(tenantCode, menteeId)
 						}
+						if (menteeData && menteeData.email) {
+							menteeEmails.push(menteeData.email)
+						}
+						// Skip missing mentee and continue processing the rest
 					} else {
 						menteeEmails.push(menteeId)
 					}

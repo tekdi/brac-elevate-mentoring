@@ -11,7 +11,7 @@ var messageReceived = function (message) {
 				message.organizations?.code || message.organizations?.[0]?.code,
 				message.tenant_code,
 				'', // token
-				true // isAdmin - system-initiated deletion
+				false // isAdmin - system-initiated deletion
 			)
 			return resolve(response)
 		} catch (error) {

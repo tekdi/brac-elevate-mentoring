@@ -731,4 +731,35 @@ module.exports = class MenteeExtensionQueries {
 			throw error
 		}
 	}
+
+	static async getMenteeExtensionById(userId, attributes = [], unScoped = false) {
+		try {
+			const queryOptions = {
+				where: {
+					user_id: userId,
+				},
+				raw: true,
+			}
+
+			// If attributes are passed update query
+			if (attributes.length > 0) {
+				queryOptions.attributes = attributes
+			}
+
+			let mentee
+			if (unScoped) {
+				mentee = await MenteeExtension.unscoped().findOne(queryOptions)
+			} else {
+				mentee = await MenteeExtension.findOne(queryOptions)
+			}
+
+			if (mentee && mentee.email) {
+				mentee.email = await emailEncryption.decrypt(mentee.email.toLowerCase())
+			}
+
+			return mentee
+		} catch (error) {
+			throw error
+		}
+	}
 }

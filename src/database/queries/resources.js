@@ -72,28 +72,22 @@ module.exports = class ResourcessData {
 
 	static async deleteResourceByIdWithSessionValidation(resourceId, sessionId, tenantCode) {
 		try {
-			// First, find the resource to validate it exists and belongs to the specified session
-			const resource = await Resources.findOne({
-				where: { id: resourceId, session_id: sessionId, tenant_code: tenantCode },
-				attributes: ['id', 'session_id'],
-			})
-
-			if (!resource) {
-				return 0 // No resource found or session mismatch
-			}
-
-			// Validate that the session exists and belongs to the same tenant
-			const session = await Session.findOne({
+			// Validate session belongs to tenant
+			const sessionExists = await Session.count({
 				where: { id: sessionId, tenant_code: tenantCode },
-				attributes: ['id'],
 			})
-			if (!session) {
-				return 0 // Session not found or invalid
-			}
-			// Delete the resource using destroy with where clause for reliable deletion
+
+			if (!sessionExists) return 0
+
+			// Delete resource in same tenant+session scope
 			const deletedCount = await Resources.destroy({
-				where: { id: resourceId, session_id: sessionId, tenant_code: tenantCode },
+				where: {
+					id: resourceId,
+					session_id: sessionId,
+					tenant_code: tenantCode,
+				},
 			})
+
 			return deletedCount > 0 ? 1 : 0
 		} catch (error) {
 			return error

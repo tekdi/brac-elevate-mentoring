@@ -176,23 +176,9 @@ module.exports = class AdminService {
 			// Optimization: If admin, query directly without tenant restriction (1 query)
 			// If regular user (self-deletion), use tenant code from token (1 query)
 			if (isAdmin) {
-				// Admin can delete users from any tenant - query without tenant restriction
-				const userRecord = await sequelize.query(
-					`SELECT * FROM user_extensions WHERE user_id = :userId AND deleted_at IS NULL LIMIT 1`,
-					{
-						type: QueryTypes.SELECT,
-						replacements: { userId },
-					}
-				)
-
-				if (userRecord && userRecord.length > 0) {
-					userTenantCode = userRecord[0].tenant_code
-					// Decrypt email if present (matching getUsersByUserIds behavior)
-					if (userRecord[0].email) {
-						userRecord[0].email = await emailEncryption.decrypt(userRecord[0].email)
-					}
-					getUserDetails = userRecord
-				}
+				// Admin deleting any user - no tenant code restriction
+				getUserDetails = await menteeQueries.getMenteeExtensionById(userId, [], true)
+				userTenantCode = getUserDetails.tenant_code
 			} else {
 				// Regular user deleting themselves - use tenant code from token (optimized path)
 				getUserDetails = await menteeQueries.getUsersByUserIds([userId], {}, tenantCode)

@@ -33,7 +33,7 @@ module.exports = class admin {
 				req.decodedToken.id,
 				req.decodedToken.organization_code,
 				req.decodedToken.tenant_code,
-				req.decodedToken.token,
+				'',
 				isAdmin
 			)
 			return userDelete

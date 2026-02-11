@@ -170,7 +170,7 @@ module.exports = class Users {
 				null, // organizationCode - not available for internal calls
 				req.body.tenant_code,
 				'', // token defaults to '' in service method
-				true // isAdmin - internal endpoint is admin-only
+				false // isAdmin - internal endpoint is admin-only
 			)
 		} catch (error) {
 			return error
