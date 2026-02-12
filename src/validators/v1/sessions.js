@@ -135,8 +135,8 @@ module.exports = {
 		req.checkParams('id')
 			.notEmpty()
 			.withMessage('id param is empty')
-			.isalphanumeric()
-			.withMessage('id param is invalid, must be an alphanumeric value')
+			.matches(/^[a-zA-Z0-9-]+$/)
+			.withMessage('id param is invalid, must contain only alphanumeric characters and hyphens')
 
 		req.checkBody('recordingUrl').notEmpty().withMessage('recordingUrl field is empty')
 	},
