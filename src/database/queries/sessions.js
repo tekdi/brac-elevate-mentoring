@@ -292,6 +292,25 @@ exports.getSessionTenantCode = async (sessionId) => {
 	}
 }
 
+// Find session by internal meeting ID from BBB (stored in meeting_info.meta.meeting_id)
+exports.findByMeetingId = async (internalMeetingId, tenantCode) => {
+	try {
+		return await Session.findOne({
+			where: {
+				tenant_code: tenantCode,
+				meeting_info: {
+					meta: {
+						meeting_id: internalMeetingId,
+					},
+				},
+			},
+			raw: true,
+		})
+	} catch (error) {
+		return error
+	}
+}
+
 exports.updateSession = async (filter, update, tenantCode, options = {}) => {
 	try {
 		filter.tenant_code = tenantCode

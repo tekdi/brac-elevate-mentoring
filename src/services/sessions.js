@@ -2967,12 +2967,11 @@ module.exports = class SessionsHelper {
 
 	static async updateRecordingUrl(internalMeetingId, recordingUrl, tenantCode) {
 		try {
-			const sessionDetails = await sessionQueries.findOne(
-				{
-					'meeting_info.meta.meeting_id': internalMeetingId,
-				},
-				tenantCode
-			)
+			console.log('updateRecordingUrl - internalMeetingId:', internalMeetingId)
+			console.log('updateRecordingUrl - tenantCode:', tenantCode)
+
+			const sessionDetails = await sessionQueries.findByMeetingId(internalMeetingId, tenantCode)
+			console.log('updateRecordingUrl - sessionDetails:', sessionDetails)
 			if (!sessionDetails) {
 				return responses.failureResponse({
 					message: 'SESSION_NOT_FOUND',
