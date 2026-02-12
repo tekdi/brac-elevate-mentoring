@@ -320,6 +320,8 @@ module.exports = class Sessions {
 
 	async updateRecordingUrl(req) {
 		try {
+			console.log('Controller - req.params:', req.params)
+			console.log('Controller - req.originalUrl:', req.originalUrl)
 			const sessionUpdated = await sessionService.updateRecordingUrl(
 				req.params.id,
 				req.body.recordingUrl,
