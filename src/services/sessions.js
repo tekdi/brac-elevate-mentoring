@@ -3356,7 +3356,7 @@ module.exports = class SessionsHelper {
 	 * @returns {Object} - Success response indicating the update was performed successfully.
 	 * @throws {Error} - Throws an error if there's an issue during the bulk update.
 	 */
-	static async bulkUpdateMentorNames(mentorIds, mentorsName, userId, organizationId, tenantCode) {
+	static async bulkUpdateMentorNames(mentorIds, mentorsName, tenantCode) {
 		try {
 			mentorIds = mentorIds.map(String)
 			await sessionQueries.updateSession(

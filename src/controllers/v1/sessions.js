@@ -347,8 +347,6 @@ module.exports = class Sessions {
 			const sessionUpdated = await sessionService.bulkUpdateMentorNames(
 				req.body.mentor_id,
 				req.body.mentor_name,
-				req.body.user_id,
-				req.body.organization_code,
 				req.body.tenant_code
 			)
 			return sessionUpdated
