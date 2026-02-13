@@ -541,6 +541,7 @@ module.exports = class MenteesHelper {
 			let meetingInfo
 			if (sessionData?.meeting_info?.value !== common.BBB_VALUE) {
 				meetingInfo = sessionData.meeting_info
+				console.log('sessionWithAteende', sessionWithAttendee)
 
 				await sessionAttendeesQueries.updateOne(
 					{
