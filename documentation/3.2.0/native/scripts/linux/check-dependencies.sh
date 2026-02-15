@@ -82,6 +82,21 @@ check_postgres() {
         echo -e "${RED}PostgreSQL service is not running.${NC}"
     fi
 }
+check_mongo() {
+    if command -v mongod > /dev/null 2>&1; then
+        echo -e "${GREEN}MongoDB is installed. Version: $(mongod --version | head -n 1)${NC}"
+    else
+        echo -e "${RED}MongoDB is not installed.${NC}"
+        return
+    fi
+
+    if systemctl is-active --quiet mongod; then
+        echo -e "${GREEN}MongoDB service is running.${NC}"
+    else
+        echo -e "${RED}MongoDB service is not running.${NC}"
+    fi
+}
+
 
 # Main execution flow of the script
 echo "MentorEd Dependencies Status"
@@ -92,3 +107,4 @@ check_redis
 check_pm2
 check_postgres
 check_citus
+check_mongo

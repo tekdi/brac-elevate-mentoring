@@ -87,6 +87,15 @@ Before setting up the application, the dependencies should be installed and veri
         ```
         brew services start redis
         ```
+    6. Install Mongo:
+
+        ```
+        brew install mongodb-community@5.0
+        ```
+
+        ```
+        brew services start mongodb-community@5.0
+        ```
 
     6. Download `check-dependencies.sh` file:
 
@@ -186,11 +195,12 @@ Before setting up the application, the dependencies should be installed and veri
 
         ```
         git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring.git && \
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/user.git && \
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/notification.git && \
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/interface-service.git && \
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/scheduler.git && \
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/user.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/notification.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/interface-service.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/scheduler.git && \
+        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/chat-communications.git
         ```
 
     - **Windows**

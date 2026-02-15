@@ -67,6 +67,35 @@ install_redis() {
     sudo systemctl restart redis.service
 }
 
+# Function to install MongoDB
+install_mongo() {
+    echo "Installing MongoDB..."
+
+    sudo apt update
+    sudo apt install -y gnupg curl
+
+    # Import MongoDB public GPG key
+    curl -fsSL https://pgp.mongodb.com/server-7.0.asc | \
+        sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+
+    # Add MongoDB repository
+    echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] \
+https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" | \
+        sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+
+    sudo apt update
+
+    # Install MongoDB
+    sudo DEBIAN_FRONTEND=noninteractive apt install -y mongodb-org
+
+    # Enable & start MongoDB
+    sudo systemctl enable mongod
+    sudo systemctl restart mongod
+
+    echo "MongoDB installation completed."
+}
+
+
 # Function to install Citus
 install_citus() {
     echo "Installing Citus..."
@@ -142,7 +171,8 @@ while true; do
             3) install_redis ;;
             4) install_citus ;;
             5) install_pm2 ;;
-            6) echo "Exiting the installation script."; break ;;
+            6) install_mongo;;
+            7) echo "Exiting the installation script."; break ;;
             *) echo "Invalid option. Please try again." ;;
         esac
         echo "Operation completed. Here are the next options:"
