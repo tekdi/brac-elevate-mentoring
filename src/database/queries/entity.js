@@ -133,7 +133,8 @@ module.exports = class UserEntityData {
 				whereClause[Op.or] = [{ label: { [Op.iLike]: `%${search}%` } }]
 			}
 
-			// Optimized: Include entity_type details via association instead of forcing N+1 queries
+			const { literal } = require('sequelize')
+
 			return await Entity.findAndCountAll({
 				where: whereClause,
 				attributes: ['id', 'entity_type_id', 'value', 'label', 'status', 'type', 'created_by', 'created_at'],
@@ -141,8 +142,12 @@ module.exports = class UserEntityData {
 					{
 						model: Entity.sequelize.models.EntityType,
 						as: 'entity_type',
-						attributes: ['id', 'value', 'label'], // Include entity_type details
-						where: { tenant_code: Array.isArray(tenantCode) ? { [Op.in]: tenantCode } : tenantCode },
+						attributes: ['id', 'value', 'label'],
+						on: {
+							entity_type_id: literal('"Entity"."entity_type_id" = "entity_type"."id"'),
+							tenant_code: literal('"Entity"."tenant_code" = "entity_type"."tenant_code"'),
+						},
+						required: true,
 					},
 				],
 				offset: limit * (page - 1),
