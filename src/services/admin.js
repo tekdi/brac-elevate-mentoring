@@ -762,7 +762,11 @@ module.exports = class AdminService {
 			const sentRequestsData = sentRequests.rows || []
 
 			// Get requests where user is requestee (received requests)
-			const sessionRequestMapping = await sessionRequestMappingQueries.getSessionsMapping(userId, tenantCode)
+			const sessionRequestMapping = await sessionRequestMappingQueries.getSessionsMapping(
+				userId,
+				common.CONNECTIONS_STATUS.REQUESTED,
+				tenantCode
+			)
 			const sessionRequestIds = Array.isArray(sessionRequestMapping)
 				? sessionRequestMapping.map((s) => s.request_session_id)
 				: []
