@@ -163,6 +163,8 @@ module.exports = class MentorExtensionQueries {
 					attribute.primaryKey ||
 					key === 'user_id' ||
 					key === 'organization_id' || // required field
+					key === 'organization_code' || // required NOT NULL field
+					key === 'tenant_code' || // required NOT NULL field
 					key === 'created_at' ||
 					key === 'updated_at' ||
 					key === 'is_mentor' // has default value
