@@ -14,12 +14,11 @@ const httpStatusCode = require('@generics/http-status')
 const responses = require('@helpers/responses')
 const common = require('@constants/common')
 const { Op } = require('sequelize')
-const cacheHelper = require('@generics/cacheHelper')
 const usersHelper = require('@helpers/users')
+const organizationCache = require('@helpers/organizationCache')
 
 const menteeQueries = require('@database/queries/userExtension')
 const organisationExtensionQueries = require('@database/queries/organisationExtension')
-// Removed cacheHelper to break circular dependency with getDefaultOrgId
 
 const emailEncryption = require('@utils/emailEncryption')
 const _ = require('lodash')
@@ -99,7 +98,7 @@ const getOrgDetails = async function ({ organizationId, tenantCode }) {
 			// If we got the data, populate the cache for future use
 			if (organizationDetails?.organization_code) {
 				try {
-					await cacheHelper.organizations.set(
+					await organizationCache.set(
 						tenantCode,
 						organizationDetails.organization_code,
 						organizationId,
@@ -885,11 +884,7 @@ const getUserDetailedListUsingCache = async function (userIds, tenantCode, delet
 		const cacheResults = await Promise.all(
 			organizations.map(async (org) => ({
 				org,
-				orgCachedData: await cacheHelper.organizations.get(
-					tenantCode,
-					org.organization_code,
-					org.organization_id
-				),
+				orgCachedData: await organizationCache.get(tenantCode, org.organization_code, org.organization_id),
 			}))
 		)
 

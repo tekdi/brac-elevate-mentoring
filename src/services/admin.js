@@ -170,29 +170,29 @@ module.exports = class AdminService {
 			let result = {}
 
 			// Step 1: Fetch user details
-			let getUserDetails = []
+			let userInfo = null
 			let userTenantCode = tenantCode
 
 			// Optimization: If admin, query directly without tenant restriction (1 query)
 			// If regular user (self-deletion), use tenant code from token (1 query)
 			if (isAdmin) {
 				// Admin deleting any user - no tenant code restriction
-				getUserDetails = await menteeQueries.getMenteeExtensionById(userId, [], true)
-				userTenantCode = getUserDetails.tenant_code
+				// getMenteeExtensionById returns a single object, not an array
+				userInfo = await menteeQueries.getMenteeExtensionById(userId, [], true)
+				userTenantCode = userInfo?.tenant_code
 			} else {
 				// Regular user deleting themselves - use tenant code from token (optimized path)
-				getUserDetails = await menteeQueries.getUsersByUserIds([userId], {}, tenantCode)
+				const getUserDetails = await menteeQueries.getUsersByUserIds([userId], {}, tenantCode)
+				userInfo = getUserDetails?.[0]
 			}
 
-			if (!getUserDetails || getUserDetails.length === 0) {
+			if (!userInfo) {
 				return responses.failureResponse({
 					statusCode: httpStatusCode.bad_request,
 					message: 'USER_NOT_FOUND',
 					result,
 				})
 			}
-
-			const userInfo = getUserDetails[0]
 			const isMentor = userInfo.is_mentor === true
 
 			// Step 2: Check if user is a session manager
@@ -1132,7 +1132,7 @@ module.exports = class AdminService {
 			orgCode: orgCodes,
 			templateData: { menteeName },
 			subjectData: { menteeName },
-			tenantCodes,
+			tenantCode: tenantCodes,
 		})
 	}
 
@@ -1189,7 +1189,7 @@ module.exports = class AdminService {
 					sessionTime: sessionDateTime.format('hh:mm A'),
 				},
 				subjectData: { sessionName: sessionDetails.title },
-				tenantCodes,
+				tenantCode: tenantCodes,
 			})
 		} catch (error) {
 			console.error('Error notifying mentor about private session cancellation:', error)
@@ -1414,21 +1414,20 @@ module.exports = class AdminService {
 			orgCode: orgCodes,
 			templateData: { mentorName },
 			subjectData: { mentorName },
-			tenantCodes,
+			tenantCode: tenantCodes,
 		})
 	}
 
 	static async getPendingSessionRequestsForMentor(mentorUserId, tenantCode) {
 		try {
+			// Query session_request directly - requestee_id is already in the table
 			const query = `
-				SELECT rs.*, rm.requestee_id
-				FROM ${RequestSession.tableName} rs
-				INNER JOIN request_session_mapping rm ON rs.id = rm.request_session_id
-				WHERE rm.requestee_id = :mentorUserId 
-				AND rs.status = :requestedStatus
-				AND rs.deleted_at IS NULL
-				AND rs.tenant_code = :tenantCode
-				AND rm.tenant_code = :tenantCode
+				SELECT *
+				FROM ${RequestSession.tableName}
+				WHERE requestee_id = :mentorUserId
+				AND status = :requestedStatus
+				AND deleted_at IS NULL
+				AND tenant_code = :tenantCode
 			`
 
 			const pendingRequests = await sequelize.query(query, {
@@ -1475,7 +1474,7 @@ module.exports = class AdminService {
 						orgCode: orgCodes,
 						templateData: { sessionName: request.title },
 						subjectData: { sessionName: request.title },
-						tenantCodes,
+						tenantCode: tenantCodes,
 					})
 				}
 			}
@@ -1531,7 +1530,7 @@ module.exports = class AdminService {
 						orgCode: orgCodes,
 						templateData: { mentorName, sessionList },
 						subjectData: { mentorName },
-						tenantCodes,
+						tenantCode: tenantCodes,
 					})
 				}
 			})
@@ -1588,7 +1587,7 @@ module.exports = class AdminService {
 						orgCode: orgCodes,
 						templateData: { menteeName: menteeName, sessionList: sessionList },
 						subjectData: { menteeName: menteeName },
-						tenantCodes,
+						tenantCode: tenantCodes,
 					})
 				}
 			})
@@ -1642,7 +1641,7 @@ module.exports = class AdminService {
 							orgCode: orgCodes,
 							templateData: { sessionName: session.title },
 							subjectData: { sessionName: session.title },
-							tenantCodes,
+							tenantCode: tenantCodes,
 						})
 					}
 				}
