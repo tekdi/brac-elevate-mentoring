@@ -762,6 +762,12 @@ module.exports = class AdminService {
 			const sentRequestsData = sentRequests.rows || []
 
 			// Get requests where user is requestee (received requests)
+			// FIX: Added missing 'status' parameter to getSessionsMapping call
+			// ROOT CAUSE: Function signature is getSessionsMapping(userId, status, tenantCode) but was called
+			// with only (userId, tenantCode). This caused tenantCode to be passed as 'status' parameter,
+			// and the actual tenantCode parameter received 'undefined'.
+			// Error: "WHERE parameter 'tenant_code' has invalid 'undefined' value"
+			// SOLUTION: Pass all three parameters in correct order: userId, status, tenantCode
 			const sessionRequestMapping = await sessionRequestMappingQueries.getSessionsMapping(
 				userId,
 				common.CONNECTIONS_STATUS.REQUESTED,
@@ -1411,6 +1417,12 @@ module.exports = class AdminService {
 		}
 	}
 
+	// FIX: Changed 'tenantCodes,' to 'tenantCode: tenantCodes,'
+	// ROOT CAUSE: Using shorthand 'tenantCodes,' creates property {tenantCodes: tenantCodes}
+	// but sendGenericNotification() expects {tenantCode: ...} (singular, not plural).
+	// This caused template lookup to fail with undefined tenant, leading to:
+	// "Cannot read properties of undefined (reading 'replace')" when composing email body.
+	// SOLUTION: Explicitly map the parameter name: tenantCode: tenantCodes
 	static async notifyMenteesAboutMentorDeletion(mentees, mentorName, orgCodes, tenantCodes) {
 		return await NotificationHelper.sendGenericNotification({
 			recipients: mentees,
@@ -1422,9 +1434,13 @@ module.exports = class AdminService {
 		})
 	}
 
+	// FIX: Removed JOIN with non-existent request_session_mapping table
+	// ROOT CAUSE: Original query tried to JOIN with 'request_session_mapping' table that doesn't exist:
+	// "relation 'request_session_mapping' does not exist"
+	// SOLUTION: Query session_request table directly since requestee_id is already a column in it.
+	// The RequestSession model (line 15-18) already has requestee_id field, no mapping table needed.
 	static async getPendingSessionRequestsForMentor(mentorUserId, tenantCode) {
 		try {
-			// Query session_request directly - requestee_id is already in the table
 			const query = `
 				SELECT *
 				FROM ${RequestSession.tableName}

@@ -15,6 +15,9 @@ const responses = require('@helpers/responses')
 const common = require('@constants/common')
 const { Op } = require('sequelize')
 const usersHelper = require('@helpers/users')
+// FIX: Use organizationCache wrapper instead of cacheHelper directly
+// This breaks the circular dependency: cacheHelper → getDefaultOrgId → user.js → cacheHelper
+// See helpers/organizationCache.js for detailed explanation
 const organizationCache = require('@helpers/organizationCache')
 
 const menteeQueries = require('@database/queries/userExtension')
