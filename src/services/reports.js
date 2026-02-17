@@ -462,7 +462,7 @@ module.exports = class ReportsHelper {
 				if (result?.length) {
 					const transformedEntityData = await utils.mapEntityTypeToData(
 						result,
-						entityTypesDataWithPagination.result
+						entityTypesDataWithPagination.result || []
 					)
 					reportDataResult.data =
 						reportDataResult.report_type === common.REPORT_TABLE ? transformedEntityData : { ...result[0] }
@@ -490,7 +490,7 @@ module.exports = class ReportsHelper {
 							defaults.tenantCode
 						)
 
-						const filtersEntity = entityTypeFilters.result.reduce((acc, item) => {
+						const filtersEntity = (entityTypeFilters.result || []).reduce((acc, item) => {
 							acc[item.value] = item.entities
 							return acc
 						}, {})
@@ -523,7 +523,7 @@ module.exports = class ReportsHelper {
 						// Process the data
 						const transformedData = await utils.mapEntityTypeToData(
 							resultWithoutPagination,
-							entityTypesData.result
+							entityTypesData.result || []
 						)
 
 						const keyToLabelMap = Object.fromEntries(
