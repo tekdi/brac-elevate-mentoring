@@ -15,10 +15,7 @@ const responses = require('@helpers/responses')
 const common = require('@constants/common')
 const { Op } = require('sequelize')
 const usersHelper = require('@helpers/users')
-// FIX: Use organizationCache wrapper instead of cacheHelper directly
-// This breaks the circular dependency: cacheHelper → getDefaultOrgId → user.js → cacheHelper
-// See helpers/organizationCache.js for detailed explanation
-const organizationCache = require('@helpers/organizationCache')
+const cacheHelper = require('@generics/cacheHelper')
 
 const menteeQueries = require('@database/queries/userExtension')
 const organisationExtensionQueries = require('@database/queries/organisationExtension')
@@ -101,7 +98,7 @@ const getOrgDetails = async function ({ organizationId, tenantCode }) {
 			// If we got the data, populate the cache for future use
 			if (organizationDetails?.organization_code) {
 				try {
-					await organizationCache.set(
+					await cacheHelper.organizations.set(
 						tenantCode,
 						organizationDetails.organization_code,
 						organizationId,
@@ -887,7 +884,11 @@ const getUserDetailedListUsingCache = async function (userIds, tenantCode, delet
 		const cacheResults = await Promise.all(
 			organizations.map(async (org) => ({
 				org,
-				orgCachedData: await organizationCache.get(tenantCode, org.organization_code, org.organization_id),
+				orgCachedData: await cacheHelper.organizations.get(
+					tenantCode,
+					org.organization_code,
+					org.organization_id
+				),
 			}))
 		)
 
