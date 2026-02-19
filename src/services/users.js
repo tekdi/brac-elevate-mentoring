@@ -110,10 +110,21 @@ module.exports = class UserHelper {
 
 	static async update(updateData, decodedToken, userId, organizationId, tenantCode) {
 		try {
+			console.log('[MENTORING USER UPDATE] updateData.userId:', updateData.userId)
+			console.log('[MENTORING USER UPDATE] updateData.tenantCode:', updateData.tenantCode)
+			console.log('[MENTORING USER UPDATE] updateData.entityId:', updateData.entityId)
+			console.log('[MENTORING USER UPDATE] tenantCode param:', tenantCode)
+			console.log(
+				'[MENTORING USER UPDATE] newValues keys:',
+				updateData.newValues ? Object.keys(updateData.newValues) : []
+			)
+
 			const userId = updateData.userId
 
 			const userTenantCode = updateData.tenantCode ? updateData.tenantCode : decodedToken.tenant_code
+			console.log('[MENTORING USER UPDATE] resolved userTenantCode:', userTenantCode)
 			const isNewUser = await this.#checkUserExistence(userId, userTenantCode)
+			console.log('[MENTORING USER UPDATE] isNewUser:', isNewUser)
 			const result = await this.#createOrUpdateUserAndOrg(userId, isNewUser, undefined, tenantCode)
 			return result
 		} catch (error) {
@@ -122,10 +133,21 @@ module.exports = class UserHelper {
 	}
 
 	static async add(bodyData, userId, organizationId, tenantCode) {
+		console.log('[MENTORING USER ADD] userId:', userId)
+		console.log('[MENTORING USER ADD] organizationId:', organizationId)
+		console.log('[MENTORING USER ADD] tenantCode:', tenantCode)
+		console.log('[MENTORING USER ADD] bodyData.id:', bodyData.id)
+		console.log('[MENTORING USER ADD] bodyData.tenant_code:', bodyData.tenant_code)
+		console.log(
+			'[MENTORING USER ADD] roles:',
+			(bodyData.roles || []).map((r) => r?.title || r)
+		)
+
 		bodyData.id = bodyData.id.toString()
 
 		let result = {}
 		const isNewUser = await this.#checkUserExistence(bodyData.id, tenantCode)
+		console.log('[MENTORING USER ADD] isNewUser:', isNewUser)
 
 		if (isNewUser) {
 			result = await this.#createUserWithBody(bodyData, tenantCode)
@@ -320,8 +342,18 @@ module.exports = class UserHelper {
 	static #checkOrgChange = (existingOrgId, newOrgId) => existingOrgId !== newOrgId
 
 	static async #updateUser(userExtensionData, tenant_code, targetHasMentorRole) {
+		console.log('[MENTORING #updateUser] userId:', userExtensionData.id)
+		console.log('[MENTORING #updateUser] tenant_code:', tenant_code)
+		console.log('[MENTORING #updateUser] targetHasMentorRole:', targetHasMentorRole)
+		console.log(
+			'[MENTORING #updateUser] roles from event:',
+			(userExtensionData.roles || []).map((r) => r?.title || r)
+		)
+
 		const isAMentee = userExtensionData.roles.some((role) => role.title === common.MENTEE_ROLE)
 		const isAMentor = userExtensionData.roles.some((role) => role.title === common.MENTOR_ROLE)
+		console.log('[MENTORING #updateUser] isAMentee:', isAMentee, '| isAMentor:', isAMentor)
+
 		const roleChangePayload = {
 			user_id: userExtensionData.id,
 			organization_id: userExtensionData.organization.id,
@@ -334,6 +366,7 @@ module.exports = class UserHelper {
 		let menteeExtension = await menteeQueries.findOne({ user_id: userExtensionData.id }, tenant_code)
 
 		if (!menteeExtension) throw new Error('User Not Found')
+		console.log('[MENTORING #updateUser] existing is_mentor in DB:', menteeExtension.is_mentor)
 
 		if (isAMentor && !menteeExtension.is_mentor) {
 			roleChangePayload.current_roles = [common.MENTEE_ROLE]
@@ -352,7 +385,9 @@ module.exports = class UserHelper {
 			isRoleChanged = true
 		}
 
+		console.log('[MENTORING #updateUser] isRoleChanged:', isRoleChanged)
 		if (isRoleChanged) {
+			console.log('[MENTORING #updateUser] Role extension triggered:', JSON.stringify(roleChangePayload))
 			//If role is changed, the role change, org policy changes for that user
 			//and additional data update of the user is done by orgAdmin's roleChange workflow
 			const roleChangeResult = await orgAdminService.roleChange(roleChangePayload, userExtensionData, tenant_code)
@@ -372,6 +407,7 @@ module.exports = class UserHelper {
 
 			return roleChangeResult
 		} else {
+			console.log('[MENTORING #updateUser] No role change - updating extension data. isAMentee:', isAMentee)
 			if (userExtensionData.email) delete userExtensionData.email
 			//If role is not changed, org policy changes along with other user data updation is done
 			//using the updateMentee or updateMentor workflows

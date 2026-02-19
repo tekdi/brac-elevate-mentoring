@@ -3,12 +3,25 @@ const orgService = require('@services/org-admin')
 var messageReceived = function (message) {
 	return new Promise(async function (resolve, reject) {
 		try {
+			console.log('[MENTORING KAFKA ROLE CHANGE] Message received')
+			console.log('[MENTORING KAFKA ROLE CHANGE] entityId:', message.entityId)
+			console.log('[MENTORING KAFKA ROLE CHANGE] tenant_code:', message.tenant_code)
+			console.log('[MENTORING KAFKA ROLE CHANGE] eventType:', message.eventType)
+
 			const { oldValues, newValues, entityId, tenant_code } = message
 			message.userId = entityId.toString()
 
 			// Trigger on any role difference (add/remove/change)
 			const oldRoles = oldValues?.organizations?.[0]?.roles || []
 			const newRoles = newValues?.organizations?.[0]?.roles || []
+			console.log(
+				'[MENTORING KAFKA ROLE CHANGE] oldRoles:',
+				oldRoles.map((r) => r?.title)
+			)
+			console.log(
+				'[MENTORING KAFKA ROLE CHANGE] newRoles:',
+				newRoles.map((r) => r?.title)
+			)
 			const toTitles = (roles) => (roles || []).map((r) => r?.title).filter(Boolean)
 			const oldSet = new Set(toTitles(oldRoles))
 			const newSet = new Set(toTitles(newRoles))
@@ -17,7 +30,14 @@ var messageReceived = function (message) {
 				[...oldSet].some((t) => !newSet.has(t)) ||
 				[...newSet].some((t) => !oldSet.has(t))
 
+			console.log('[MENTORING KAFKA ROLE CHANGE] rolesDiffer:', rolesDiffer)
 			if (rolesDiffer) {
+				console.log(
+					'[MENTORING KAFKA ROLE CHANGE] Processing role change for userId:',
+					entityId,
+					'tenant_code:',
+					tenant_code
+				)
 				const bodyData = {
 					user_id: entityId.toString(),
 					current_roles: oldRoles,
@@ -30,6 +50,7 @@ var messageReceived = function (message) {
 					tenant_code: tenant_code,
 				}
 				await orgService.roleChange(bodyData, updateData, tenant_code)
+				console.log('[MENTORING KAFKA ROLE CHANGE] ✅ roleChange() completed for userId:', entityId)
 				return resolve()
 			}
 		} catch (error) {
