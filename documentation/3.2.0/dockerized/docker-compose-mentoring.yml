@@ -262,7 +262,7 @@ services:
       driver: none
   portal:
     # Update with latest image
-    image: shikshalokamqa/mentoring-mobile-app:3.2.0.2
+    image: shikshalokamqa/mentoring-mobile-app:3.2.0.3
     container_name: portal
     ports:
       - "8100:7601"
@@ -283,20 +283,16 @@ services:
     networks:
       - mentored_net
   elevate-portal:
-    image: siddhishinde/shikshagraha:qa-k9s-v2
+    image: farhansl/elevate-portal:1.1.5
     container_name: elevate-portal-mentoring
-    environment:
-      NODE_ENV: production
-
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
     # Equivalent of envFrom: configMapRef
     env_file:
        - ${elevate_portal_env}
-
-    ports:
-      - "3000:3000"
-      - "4300:4300"
-      - "4301:4301"
-      - "4108:4108"
 
 networks:
   mentored_net:
