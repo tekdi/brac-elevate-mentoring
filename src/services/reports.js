@@ -460,7 +460,6 @@ module.exports = class ReportsHelper {
 				}
 				// Process query results
 				if (result?.length) {
-					// Fallback to empty array if result is undefined (when getEntityTypeWithEntitiesBasedOnOrg returns {success: false, message} on error)
 					const transformedEntityData = await utils.mapEntityTypeToData(
 						result,
 						entityTypesDataWithPagination.result || []
@@ -491,9 +490,6 @@ module.exports = class ReportsHelper {
 							defaults.tenantCode
 						)
 
-						// FIX: Mentee reports have isEntityType columns (categories, recommended_for) which triggers direct DB query path.
-						// If query fails, getEntityTypeWithEntitiesBasedOnOrg returns {success: false, message} without 'result' property.
-						// Fallback to empty array prevents "Cannot read properties of undefined (reading 'reduce')" error.
 						const filtersEntity = (entityTypeFilters.result || []).reduce((acc, item) => {
 							acc[item.value] = item.entities
 							return acc
@@ -524,8 +520,6 @@ module.exports = class ReportsHelper {
 							defaults.tenantCode
 						)
 
-						// Process the data
-						// Fallback to empty array if result is undefined (same defensive check as above for CSV download path)
 						const transformedData = await utils.mapEntityTypeToData(
 							resultWithoutPagination,
 							entityTypesData.result || []
