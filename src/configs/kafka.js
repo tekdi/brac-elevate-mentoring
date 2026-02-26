@@ -14,6 +14,7 @@ const rolechangeConsumer = require('@generics/kafka/consumers/rolechange')
 const createuserConsumer = require('@generics/kafka/consumers/createuser')
 const updateuserConsumer = require('@generics/kafka/consumers/updateuser')
 const organizationConsumer = require('@generics/kafka/consumers/organization')
+const tenantConsumer = require('@generics/kafka/consumers/tenant')
 
 module.exports = async () => {
 	const kafkaIps = process.env.KAFKA_URL.split(',')
@@ -48,7 +49,11 @@ async function startConsumer(kafkaClient) {
 
 	await consumer.connect()
 
-	const topics = [process.env.EVENTS_TOPIC, process.env.CLEAR_INTERNAL_CACHE].filter(Boolean)
+	const topics = [
+		process.env.EVENTS_TOPIC,
+		process.env.CLEAR_INTERNAL_CACHE,
+		process.env.EVENT_TENANT_KAFKA_TOPIC,
+	].filter(Boolean)
 	await consumer.subscribe({ topics })
 
 	await consumer.run({
@@ -76,6 +81,12 @@ async function startConsumer(kafkaClient) {
 				}
 
 				let response
+
+				if (payload && topic === process.env.EVENT_TENANT_KAFKA_TOPIC) {
+					if (payload.eventType === 'create' || payload.eventType === 'update') {
+						response = await tenantConsumer.messageReceived(payload)
+					}
+				}
 
 				if (payload && topic === process.env.EVENTS_TOPIC) {
 					// Handle organization events

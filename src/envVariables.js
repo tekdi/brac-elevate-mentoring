@@ -597,6 +597,11 @@ let enviromentVariables = {
 		optional: true,
 		default: 'mentoring.events',
 	},
+	EVENT_TENANT_KAFKA_TOPIC: {
+		message: 'Required kafka topic for tenant events',
+		optional: true,
+		default: 'tenantEvent',
+	},
 	SERVICE_NAME: {
 		message: 'Required SERVICE_NAME to handling health check',
 		optional: true,
