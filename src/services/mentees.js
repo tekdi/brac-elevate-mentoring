@@ -1525,49 +1525,6 @@ module.exports = class MenteesHelper {
 			const query = utils.processQueryParametersWithExclusions(queryParams)
 			const userExtensionModelName = await menteeQueries.getModelName()
 
-			let connectedMenteeIds = []
-			let connectedMenteesCount
-			if (queryParams.connected_mentees === 'true') {
-				const connectedQueryParams = { ...queryParams }
-				delete connectedQueryParams.connected_mentees
-				const connectedQuery = utils.processQueryParametersWithExclusions(connectedQueryParams)
-
-				const connectionDetails = await connectionQueries.getConnectionsDetails(
-					pageNo,
-					pageSize,
-					connectedQuery,
-					searchText,
-					queryParams.mentorId ? queryParams.mentorId : userId,
-					organization_codes,
-					[], // roles can be passed if needed
-					tenantCode
-				)
-
-				if (connectionDetails?.data?.length > 0) {
-					pageNo = null
-					pageSize = null
-					connectedMenteeIds = connectionDetails.data.map((item) => item.user_id)
-					// if (!connectedMenteeIds.includes(userId)) {
-					// 	connectedMenteeIds.push(userId)
-					// }
-				}
-				if (typeof connectionDetails?.count === 'number') {
-					connectedMenteesCount = connectionDetails.count
-				}
-
-				// If there are no connected mentees, short-circuit and return empty
-				if (connectedMenteeIds.length === 0) {
-					return responses.successResponse({
-						statusCode: httpStatusCode.ok,
-						message: 'MENTEE_LIST',
-						result: {
-							data: [],
-							count: 0,
-						},
-					})
-				}
-			}
-
 			const defaults = await getDefaults()
 			if (!defaults.tenantCode)
 				return responses.failureResponse({
@@ -1587,6 +1544,42 @@ module.exports = class MenteesHelper {
 			)
 
 			let filteredQuery = utils.validateAndBuildFilters(query, validationData)
+
+			let connectedMenteeIds = []
+			let connectedMenteesCount
+			if (queryParams.connected_mentees === 'true') {
+				const connectionDetails = await connectionQueries.getConnectionsDetails(
+					pageNo,
+					pageSize,
+					filteredQuery,
+					searchText,
+					queryParams.mentorId ? queryParams.mentorId : userId,
+					organization_codes,
+					[], // roles can be passed if needed
+					tenantCode
+				)
+
+				if (connectionDetails?.data?.length > 0) {
+					pageNo = null
+					pageSize = null
+					connectedMenteeIds = connectionDetails.data.map((item) => item.user_id)
+				}
+				if (typeof connectionDetails?.count === 'number') {
+					connectedMenteesCount = connectionDetails.count
+				}
+
+				// If there are no connected mentees, short-circuit and return empty
+				if (connectedMenteeIds.length === 0) {
+					return responses.successResponse({
+						statusCode: httpStatusCode.ok,
+						message: 'MENTEE_LIST',
+						result: {
+							data: [],
+							count: 0,
+						},
+					})
+				}
+			}
 
 			const emailIds = []
 			const searchTextArray = searchText ? searchText.split(',') : []
