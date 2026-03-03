@@ -17,7 +17,7 @@ Once these prerequisites are in place, you're all set to get started with settin
 For detailed deployment and configuration instructions, refer to the official Rocket.Chat Deployment Guide:
 [Rocket.Chat Deployment Documentation](https://docs.rocket.chat/docs/rocketchat)
 
-After installation, create a Rocket.Chat admin account, generate an API access token, and update the token along with the admin credentials in the Communication Service environment configuration.
+After installation, create a Rocket.Chat admin account, generate an API access token, and update the token along with the admin credentials in the Communication Service environment configuration and update rocket chat domain details in mentoring portal env.js file.
 
 
 
@@ -356,6 +356,6 @@ In such cases, you can generate sample user accounts using the steps below. This
 
    | Email ID                 | Password   | Role                                |
    | ------------------------ | ---------- | ----------------------------------- |
-   | aaravpatel@example.com   | Password1@ | Mentee                              |
-   | arunimareddy@example.com | Password1@ | Mentor                              |
+   | aaravpatel@example.com   | Password1@ | mentor                              |
+   | arunimareddy@example.com | Password1@ | mentee                              |
    | devikasingh@example.com  | Password1@ | Organization Admin, Session Manager |

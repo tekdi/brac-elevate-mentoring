@@ -60,6 +60,7 @@ services:
       driver: none
   mentoring:
     image: shikshalokamqa/elevate-mentoring:3.2
+    container_name: mentoring
     ports:
       - "3033:3033"
     command: >
@@ -146,6 +147,7 @@ services:
 
   notification:
     image: shikshalokamqa/elevate-notification:3.1.1
+    container_name: notification
     ports:
       - "3002:3002"
     command: >
@@ -172,6 +174,7 @@ services:
   scheduler:
     # Update with latest image
     image: shikshalokamqa/elevate-scheduler:3.1
+    container_name: scheduler
     ports:
       - "4000:4000"
     command: ["node", "app.js"]
@@ -189,6 +192,7 @@ services:
   interface:
     # Update with latest image
     image: shikshalokamqa/elevate-interface:3.3.2
+    container_name: interface
     ports:
       - "3569:3569"
     command: ["node", "app.js"]
@@ -198,6 +202,7 @@ services:
       - ${interface_env}
   chat_communication:
     image: shikshalokamqa/elevate-chat-communication-service:3.2
+    container_name: chat-communications
     ports:
       - "3123:3123"
     command: >
@@ -272,6 +277,7 @@ services:
       - mentored_net
   entity_management:
     image: shikshalokamqa/elevate-entity-management:3.3.13.1
+    container_name: entity-management
     ports:
       - '5001:5001'
     env_file:
