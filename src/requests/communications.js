@@ -43,9 +43,16 @@ exports.signup = async ({ userId, name, email, image, tenantCode }) => {
 		if (image) {
 			body.image_url = image
 		}
+		console.log('[COMM REQUEST] signup →', { url, userId, name, hasEmail: !!email, hasImage: !!image, tenantCode })
 		const response = await apiClient.post(url, body)
+		console.log('[COMM REQUEST] signup ←', { status: response.status, userId: response.data?.result?.user_id })
 		return response.data
 	} catch (err) {
+		console.log('[COMM REQUEST] signup error', {
+			userId,
+			status: err.response?.status,
+			message: err.response?.data?.message || err.message,
+		})
 		throw err
 	}
 }
@@ -62,9 +69,20 @@ exports.login = async ({ userId, tenantCode }) => {
 	try {
 		const url = apiEndpoints.COMMUNICATION_LOGIN
 		const body = { user_id: userId, tenant_code: tenantCode }
+		console.log('[COMM REQUEST] login →', { url, userId, tenantCode })
 		const response = await apiClient.post(url, body)
+		console.log('[COMM REQUEST] login ←', {
+			status: response.status,
+			hasAuthToken: !!response.data?.result?.auth_token,
+			commUserId: response.data?.result?.user_id,
+		})
 		return response.data
 	} catch (err) {
+		console.log('[COMM REQUEST] login error', {
+			userId,
+			status: err.response?.status,
+			message: err.response?.data?.message || err.message,
+		})
 		if (err.response && err.response.data && err.response.data.message) {
 			const error = new Error(err.response.data.message)
 			error.statusCode = err.response.status
@@ -106,10 +124,24 @@ exports.createChatRoom = async ({ userIds, initialMessage, tenantCode }) => {
 	try {
 		const url = apiEndpoints.COMMUNICATION_CREATE_CHAT_ROOM
 		const body = { usernames: userIds, initial_message: initialMessage, tenant_code: tenantCode }
-
+		console.log('[COMM REQUEST] createChatRoom →', {
+			url,
+			userIds,
+			hasInitialMessage: !!initialMessage,
+			tenantCode,
+		})
 		const response = await apiClient.post(url, body)
+		console.log('[COMM REQUEST] createChatRoom ←', {
+			status: response.status,
+			roomId: response.data?.result?.room?.room_id,
+		})
 		return response.data
 	} catch (err) {
+		console.log('[COMM REQUEST] createChatRoom error', {
+			userIds,
+			status: err.response?.status,
+			message: err.response?.data?.message || err.message,
+		})
 		throw err
 	}
 }

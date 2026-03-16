@@ -1964,7 +1964,9 @@ module.exports = class MenteesHelper {
 	 */
 	static async getCommunicationToken(id, tenantCode, orgCode) {
 		try {
+			console.log('[COMM TOKEN] login attempt', { userId: id, tenantCode })
 			const token = await communicationHelper.login(id, tenantCode)
+			console.log('[COMM TOKEN] login success', { userId: id })
 
 			return responses.successResponse({
 				statusCode: httpStatusCode.ok,
@@ -1972,6 +1974,7 @@ module.exports = class MenteesHelper {
 				result: token,
 			})
 		} catch (error) {
+			console.log('[COMM TOKEN] login failed', { userId: id, error: error.message })
 			if (error.message == 'unauthorized' || error.message.includes('USER_NOT_FOUND')) {
 				try {
 					// Step 1: Try to get user details from cache first for better performance
@@ -1981,9 +1984,12 @@ module.exports = class MenteesHelper {
 						(await cacheHelper.mentor.getCacheOnly(tenantCode, id)) ??
 						(await cacheHelper.mentee.getCacheOnly(tenantCode, id))
 
+					console.log('[COMM TOKEN] user from cache:', user ? 'found' : 'miss')
+
 					// Step 2: Fallback to database if cache miss (include encrypted email field)
 					if (!user) {
 						user = await menteeQueries.getMenteeExtension(id, [], true, tenantCode)
+						console.log('[COMM TOKEN] user from DB:', user ? 'found' : 'not found')
 					}
 
 					if (!user) {
@@ -2009,19 +2015,24 @@ module.exports = class MenteesHelper {
 						try {
 							const imageResponse = await userRequests.getDownloadableUrl(user.image)
 							userImageUrl = imageResponse?.result
-							console.log(`💾 Generated downloadable image URL for user ${id}`)
+							console.log('[COMM TOKEN] image URL generated', { userId: id })
 						} catch (imageError) {
-							console.log(`Failed to generate image URL for user ${id}:`, imageError.message)
+							console.log('[COMM TOKEN] image URL generation failed', {
+								userId: id,
+								error: imageError.message,
+							})
 							// Continue without image - not a blocking error
 						}
 					}
 
 					// Step 5: Attempt signup with user details including generated image URL
+					console.log('[COMM TOKEN] signup attempt', { userId: id, hasImage: !!userImageUrl })
 					await communicationHelper.create(id, user.name, user.email, userImageUrl, tenantCode)
-					console.log(`💾 Created communication user for ${id} with ${userImageUrl ? 'image' : 'no image'}`)
+					console.log('[COMM TOKEN] signup success', { userId: id })
 
 					// Step 6: Retry login after successful signup
 					const token = await communicationHelper.login(id, tenantCode)
+					console.log('[COMM TOKEN] login after signup success', { userId: id })
 
 					return responses.successResponse({
 						statusCode: httpStatusCode.ok,
@@ -2029,6 +2040,7 @@ module.exports = class MenteesHelper {
 						result: token,
 					})
 				} catch (signupError) {
+					console.log('[COMM TOKEN] signup failed', { userId: id, error: signupError.message })
 					return responses.failureResponse({
 						statusCode: httpStatusCode.internal_server_error,
 						message: 'COMMUNICATION_SIGNUP_AND_LOGIN_FAILED',

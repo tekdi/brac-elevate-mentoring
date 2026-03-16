@@ -172,14 +172,32 @@ exports.createChatRoom = async (recipientUserId, initiatorUserId, initialMessage
 			true
 		)
 
+		console.log(
+			`[createChatRoom] userDetails fetched for [${initiatorUserId}, ${recipientUserId}]:`,
+			JSON.stringify(
+				userDetails.map((u) => ({
+					user_id: u.user_id,
+					has_meta: !!u.meta,
+					communications_user_id: u.meta?.communications_user_id || null,
+				}))
+			)
+		)
+
 		// Loop through users to ensure they have a `communications_user_id`
 		for (const user of userDetails) {
 			if (!user.meta || !user.meta.communications_user_id) {
+				console.log(
+					`[createChatRoom] user_id=${user.user_id} has no communications_user_id in meta, attempting signup`
+				)
 				let userImage
 				if (user?.image) {
 					userImage = (await userRequests.getDownloadableUrl(user.image))?.result
 				}
 				await this.create(user.user_id, user.name, user.email, userImage, tenantCode)
+			} else {
+				console.log(
+					`[createChatRoom] user_id=${user.user_id} already has communications_user_id=${user.meta.communications_user_id}, skipping signup`
+				)
 			}
 		}
 

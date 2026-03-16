@@ -307,15 +307,21 @@ module.exports = class ConnectionHelper {
 	 */
 	static async accept(bodyData, userId, orgCode, tenantCode) {
 		try {
+			console.log('[CONN ACCEPT] start', { userId, targetUserId: bodyData.user_id, tenantCode })
+
 			const connectionRequest = await this.checkConnectionRequestExists(userId, bodyData.user_id, tenantCode)
-			if (!connectionRequest)
+			if (!connectionRequest) {
+				console.log('[CONN ACCEPT] connection request not found', { userId, targetUserId: bodyData.user_id })
 				return responses.failureResponse({
 					message: 'CONNECTION_REQUEST_NOT_FOUND_OR_ALREADY_PROCESSED',
 					statusCode: httpStatusCode.not_found,
 					responseCode: 'CLIENT_ERROR',
 				})
+			}
 
+			console.log('[CONN ACCEPT] connection request found, approving', { requestId: connectionRequest.id })
 			await connectionQueries.approveRequest(userId, bodyData.user_id, connectionRequest.meta, tenantCode)
+			console.log('[CONN ACCEPT] request approved')
 
 			const userDetails = await userExtensionQueries.getUsersByUserIds(
 				[userId, bodyData.user_id],
@@ -325,6 +331,7 @@ module.exports = class ConnectionHelper {
 				tenantCode,
 				true
 			)
+
 			let chatRoom
 			// Create room only if both users have enable chat option
 			if (
@@ -332,12 +339,20 @@ module.exports = class ConnectionHelper {
 				userDetails[0]?.settings?.chat_enabled === true &&
 				userDetails[1]?.settings?.chat_enabled === true
 			) {
+				console.log('[CONN ACCEPT] both users have chat enabled, creating chat room')
 				chatRoom = await communicationHelper.createChatRoom(
 					userId,
 					bodyData.user_id,
 					connectionRequest.meta.message,
 					tenantCode
 				)
+				console.log('[CONN ACCEPT] chat room created', { roomId: chatRoom?.result?.room?.room_id })
+			} else {
+				console.log('[CONN ACCEPT] chat room skipped', {
+					userDetailsCount: userDetails.length,
+					user1ChatEnabled: userDetails[0]?.settings?.chat_enabled,
+					user2ChatEnabled: userDetails[1]?.settings?.chat_enabled,
+				})
 			}
 
 			// Update connection meta with room_id if chatRoom was created
@@ -354,7 +369,9 @@ module.exports = class ConnectionHelper {
 				tenantCode
 			)
 
+			console.log('[CONN ACCEPT] sending accept notification')
 			await this.sendConnectionAcceptNotification(bodyData.user_id, userId, orgCode, tenantCode)
+			console.log('[CONN ACCEPT] notification sent, done')
 
 			// Cache deletion removed: is_connected now fetched from DB in real-time
 
@@ -364,6 +381,7 @@ module.exports = class ConnectionHelper {
 				result: updateConnection,
 			})
 		} catch (error) {
+			console.log('[CONN ACCEPT] error', { userId, targetUserId: bodyData.user_id, error: error.message })
 			throw error
 		}
 	}
