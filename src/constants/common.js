@@ -248,67 +248,67 @@ module.exports = {
 				name: 'sessions',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			entityTypes: {
 				name: 'entityTypes',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			forms: {
 				name: 'forms',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			organizations: {
 				name: 'organizations',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			mentor: {
 				name: 'mentor',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			mentee: {
 				name: 'mentee',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			platformConfig: {
 				name: 'platformConfig',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			notificationTemplates: {
 				name: 'notificationTemplates',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			displayProperties: {
 				name: 'displayProperties',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			permissions: {
 				name: 'permissions',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 			apiPermissions: {
 				name: 'apiPermissions',
 				enabled: true,
 				defaultTtl: 86400, // 1 day
-				useInternal: false,
+				useInternal: true,
 			},
 		},
 	},
