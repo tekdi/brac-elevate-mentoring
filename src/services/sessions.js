@@ -2578,8 +2578,7 @@ module.exports = class SessionsHelper {
 					{
 						status: common.LIVE_STATUS,
 						started_at: utils.utcFormat(),
-					},
-					tenantCode
+					}
 				)
 			}
 			if (session?.meeting_info?.link) {

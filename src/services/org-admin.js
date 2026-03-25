@@ -403,7 +403,7 @@ module.exports = class OrgAdminService {
 
 			let defaultOrgId
 			if (defaultOrgDetails.success && defaultOrgDetails.data && defaultOrgDetails.data.result) {
-				defaultOrgId = String(defaultOrgDetails.data.result.id)
+				defaultOrgId = defaultOrgDetails.data.result.id
 			} else {
 				return responses.failureResponse({
 					message: 'DEFAULT_ORG_ID_NOT_SET',
@@ -412,12 +412,19 @@ module.exports = class OrgAdminService {
 				})
 			}
 
-			if (String(defaultOrgId) === String(userOrgId)) {
+			if (defaultOrgId === userOrgId) {
 				return responses.failureResponse({
 					message: 'USER_IS_FROM_DEFAULT_ORG',
 					statusCode: httpStatusCode.bad_request,
 					responseCode: 'CLIENT_ERROR',
 				})
+			}
+
+			// Fetch entity type data using defaultOrgId and entityValue
+			const filter = {
+				value: entityValue,
+				organization_id: defaultOrgId,
+				allow_filtering: true,
 			}
 
 			const defaults = await getDefaults()
@@ -449,7 +456,6 @@ module.exports = class OrgAdminService {
 			entityTypeDetails.parent_id = entityTypeDetails.id
 			entityTypeDetails.label = entityLabel
 			entityTypeDetails.organization_id = userOrgId
-			entityTypeDetails.organization_code = decodedToken.organization_code
 			entityTypeDetails.created_by = decodedToken.id
 			entityTypeDetails.updated_by = decodedToken.id
 			delete entityTypeDetails.id
@@ -508,8 +514,8 @@ module.exports = class OrgAdminService {
 			// Get organization policies
 			const orgPolicies = await organisationExtensionQueries.findOrInsertOrganizationExtension(
 				orgId,
-				bodyData.organization_code,
 				organizationDetails.data.result.name,
+				bodyData.organization_code,
 				tenantCode
 			)
 			if (!orgPolicies?.organization_id) {

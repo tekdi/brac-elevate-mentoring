@@ -256,7 +256,7 @@ module.exports = class availabilityHelper {
 				user_id: userId,
 				tenant_code: tenantCode,
 			}
-			let userAvailabilities = await availabilityQueries.findAvailability(filter, tenantCode)
+			let userAvailabilities = await availabilityQueries.findAvailability(filter)
 
 			const sessionOptions = {
 				attributes: ['id', 'title', 'description', 'start_date', 'end_date', 'mentor_id', 'created_by'],
@@ -268,7 +268,6 @@ module.exports = class availabilityHelper {
 					},
 					mentor_id: userId,
 				},
-				tenantCode,
 				sessionOptions
 			)
 
@@ -350,14 +349,13 @@ module.exports = class availabilityHelper {
 				user_id: userId,
 				tenant_code: tenantCode,
 			}
-			let userAvailabilities = await availabilityQueries.findAvailability(filter, tenantCode)
+			let userAvailabilities = await availabilityQueries.findAvailability(filter)
 			const sessions = await sessionQueries.findAll(
 				{
 					start_date: {
 						[Op.between]: [query.startEpoch, query.endEpoch],
 					},
 				},
-				tenantCode,
 				{}
 			)
 			if (userAvailabilities.length === 0) {
@@ -425,14 +423,13 @@ module.exports = class availabilityHelper {
 				],
 				tenant_code: tenantCode,
 			}
-			let userAvailabilities = await availabilityQueries.findAvailability(filter, tenantCode)
+			let userAvailabilities = await availabilityQueries.findAvailability(filter)
 			const sessions = await sessionQueries.findAll(
 				{
 					start_date: {
 						[Op.between]: [query.startEpoch, query.endEpoch],
 					},
 				},
-				tenantCode,
 				{}
 			)
 			if (userAvailabilities.length === 0) {

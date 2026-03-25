@@ -461,14 +461,11 @@ module.exports = class EntityHelper {
 				}
 			)
 
-			const deleteCount = await entityTypeQueries.deleteEntityTypesAndEntities(
-				{
-					status: common.ACTIVE_STATUS,
-					value: { [Op.in]: value },
-					tenant_code: tenantCode,
-				},
-				tenantCode
-			)
+			const deleteCount = await entityTypeQueries.deleteEntityTypesAndEntities({
+				status: common.ACTIVE_STATUS,
+				value: { [Op.in]: value },
+				tenant_code: tenantCode,
+			})
 
 			if (deleteCount === 0) {
 				return responses.failureResponse({

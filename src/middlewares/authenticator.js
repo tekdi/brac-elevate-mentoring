@@ -130,11 +130,6 @@ module.exports = async function (req, res, next) {
 				? req.decodedToken?.organization_id?.toString()
 				: req.decodedToken?.organization_id
 
-		if (!req.decodedToken.tenant_code && process.env.DEFAULT_TENANT_CODE) {
-			req.decodedToken.tenant_code = process.env.DEFAULT_TENANT_CODE
-			console.log('tenant_code was missing, set from DEFAULT_TENANT_CODE:', req.decodedToken.tenant_code)
-		}
-
 		if (!req.decodedToken[organizationKey]) {
 			throw createUnauthorizedResponse()
 		}

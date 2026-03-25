@@ -247,8 +247,7 @@ module.exports = class MenteesHelper {
 				if (updateData.is_feedback_skipped) {
 					const rowsAffected = await sessionQueries.updateOne(
 						{ id: sessionId, tenant_code: tenantCode },
-						updateData,
-						tenantCode
+						updateData
 					)
 					if (rowsAffected == 0) {
 						return responses.failureResponse({
@@ -308,8 +307,7 @@ module.exports = class MenteesHelper {
 							mentee_id: userId,
 							tenant_code: tenantCode,
 						},
-						updateData,
-						tenantCode
+						updateData
 					)
 					if (attendeeRowsAffected[0] == 0) {
 						return responses.failureResponse({

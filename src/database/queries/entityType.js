@@ -38,21 +38,12 @@ module.exports = class UserEntityData {
 
 	static async findAllEntityTypes(orgCodes, tenantCodes, attributes, filter = {}) {
 		try {
-			const whereClause = {
-				tenant_code: tenantCodes,
-				...filter,
-			}
-
-			// Only apply org filter when a real value is provided (skip empty object {})
-			const hasOrgFilter =
-				orgCodes &&
-				(Array.isArray(orgCodes) || typeof orgCodes !== 'object' || Object.keys(orgCodes).length > 0)
-			if (hasOrgFilter) {
-				whereClause.organization_code = orgCodes
-			}
-
 			const entityData = await EntityType.findAll({
-				where: whereClause,
+				where: {
+					organization_code: orgCodes,
+					tenant_code: tenantCodes,
+					...filter,
+				},
 				attributes,
 				raw: true,
 			})

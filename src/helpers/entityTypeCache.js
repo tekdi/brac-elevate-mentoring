@@ -123,7 +123,20 @@ async function getEntityTypesAndEntitiesWithCache(originalFilter, tenantCode, or
 				Array.isArray(tenantCode) ? tenantCode : [tenantCode]
 			)
 
-			// Tenant isolation: no default tenant fallback
+			// If not found with user codes and defaults exist, try with default codes
+			if (
+				(!dbResult || dbResult.length === 0) &&
+				defaults &&
+				defaults.orgCode &&
+				defaults.tenantCode &&
+				(defaults.tenantCode !== tenantCode || defaults.orgCode !== orgCode)
+			) {
+				let defaultFilter = {
+					...originalFilter,
+					organization_code: defaults.orgCode,
+				}
+				dbResult = await entityTypeQueries.findUserEntityTypesAndEntities(defaultFilter, [defaults.tenantCode])
+			}
 		} catch (dbError) {
 			console.error(`Failed to fetch entity types from database:`, dbError.message)
 			return []
