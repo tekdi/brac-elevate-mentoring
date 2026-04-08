@@ -11,3 +11,4 @@ PASSWORD_HASH_LENGTH=10
 USERNAME_HASH_LENGTH=10
 PASSWORD_HASH_SALT="wRvads&%909$ss" 
 USERNAME_HASH_SALT="wRvadsss33123s&%$"
+DEV_DATABASE_URL=postgres://postgres:postgres@citus_master:5432/chat-communication

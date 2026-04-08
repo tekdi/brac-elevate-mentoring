@@ -267,7 +267,7 @@ services:
       driver: none
   portal:
     # Update with latest image
-    image: shikshalokamqa/mentoring-mobile-app:3.2.0.3
+    image: shikshalokamqa/mentoring-mobile-app:3.2.0.4
     container_name: portal
     ports:
       - "8100:7601"
