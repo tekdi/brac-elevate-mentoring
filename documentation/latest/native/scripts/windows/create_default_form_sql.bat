@@ -2,7 +2,7 @@
 setlocal
 
 :: Define the GitHub raw URL for the JSON file
-set "GITHUB_REPO=https://raw.githubusercontent.com/ELEVATE-Project/mentoring-mobile-app/refs/heads/release-3.1.1/forms.json"
+set "GITHUB_REPO=https://raw.githubusercontent.com/ELEVATE-Project/mentoring-mobile-app/refs/heads/release-3.2.0/forms.json"
 set "JSON_FILE=sample-data\mentoring\forms.json"  
 
 :: Set organization_id

@@ -4,6 +4,8 @@ export const environment = {
 	staging: false,
 	dev: false,
 	baseUrl: 'http://localhost:3569',
+	chatBaseUrl: 'https://chat.some-domain.temp.org/',
+	chatWebSocketUrl: 'wss://chat.some-domain.temp.org/websocket',
 	sqliteDBName: 'mentoring.db',
 	deepLinkUrl: 'https://mentored.shikshalokam.org',
 	privacyPolicyUrl: 'https://shikshalokam.org/mentoring/privacy-policy',

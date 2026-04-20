@@ -65,6 +65,23 @@ if errorlevel 1 (
     echo Privileges assigned to notification database successfully.
 )
 
+echo Creating the communications database...
+psql -p 5432 -U postgres -c "CREATE DATABASE communications;"
+if errorlevel 1 (
+    echo Failed to create communications database.
+) else (
+    echo Communications database created successfully.
+)
+
+echo Assigning privileges to communications database...
+psql -p 5432 -U postgres -d communications -c "GRANT ALL PRIVILEGES ON DATABASE communications TO postgres;"
+psql -p 5432 -U postgres -d communications -c "GRANT ALL ON SCHEMA public TO postgres;"
+if errorlevel 1 (
+    echo Failed to assign privileges to communications database.
+) else (
+    echo Privileges assigned to communications database successfully.
+)
+
 echo Database setup complete.
 
 REM Unset the environment variable for security
