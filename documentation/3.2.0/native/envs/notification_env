@@ -10,11 +10,5 @@ INTERNAL_ACCESS_TOKEN=internal_access_token
 KAFKA_GROUP_ID=notification
 KAFKA_HOST=localhost:9092
 KAFKA_TOPIC=develop.notifications
-EMAIL_SERVICE=smtp
-FROM_EMAIL=no-reply@some.org
-# Replace with your actual SMTP server details
-SMTP_HOST=sandbox.smtp.mailtrap.io
-SMTP_PASS=sample_smtp_pass
-SMTP_PORT=25
-SMTP_SECURE=false
-SMTP_USER=sample_smtp_user
+SENDGRID_API_KEY=asd9f87a
+SENDGRID_FROM_MAIL=no-reply@some.org
