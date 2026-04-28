@@ -222,25 +222,23 @@ Set the following environment variables to connect MentorED's Chat Communication
     - **Ubuntu/Linux/MacOS**
 
         ```
-
-        git clone -b master https://github.com/ELEVATE-Project/mentoring.git && \
-        git clone -b master https://github.com/ELEVATE-Project/user.git && \
-        git clone -b master https://github.com/ELEVATE-Project/notification.git && \
-        git clone -b main https://github.com/ELEVATE-Project/interface-service.git && \
-        git clone -b master https://github.com/ELEVATE-Project/scheduler.git && \
-        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/chat-communications.git && \
-        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git
+        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/user.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/notification.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/interface-service.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/scheduler.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/chat-communications.git
         ```
 
     - **Windows**
 
         ```
-
-        git clone -b master https://github.com/ELEVATE-Project/mentoring.git & ^
-        git clone -b master https://github.com/ELEVATE-Project/user.git & ^
-        git clone -b master https://github.com/ELEVATE-Project/notification.git & ^
-        git clone -b main https://github.com/ELEVATE-Project/interface-service.git & ^
-        git clone -b master https://github.com/ELEVATE-Project/scheduler.git & ^
+        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/user.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/notification.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/interface-service.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/scheduler.git & ^
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/chat-communications.git & ^
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git
         ```
@@ -312,11 +310,11 @@ Set the following environment variables to connect MentorED's Chat Communication
         curl -L -o mentoring-mobile-app\src\environments\environment.ts https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/environment.ts
         ```
 
-    > **Note:** Modify the environment files as necessary for your deployment using any text editor, ensuring that the values are appropriate for your environment. The default values provided in the current files are functional and serve as a good starting point. Refer to the sample env files provided at the [Mentoring](https://github.com/ELEVATE-Project/mentoring/blob/master/src/.env.sample), [User](https://github.com/ELEVATE-Project/user/blob/master/src/.env.sample), [Notification](https://github.com/ELEVATE-Project/notification/blob/master/src/.env.sample), [Scheduler](https://github.com/ELEVATE-Project/scheduler/blob/master/src/.env.sample), and [Interface](https://github.com/ELEVATE-Project/interface-service/blob/main/src/.env.sample) repositories for reference.
+    > **Note:** Modify the environment files as necessary for your deployment using any text editor, ensuring that the values are appropriate for your environment. The default values provided in the current files are functional and serve as a good starting point. Refer to the sample env files provided at the [Mentoring](https://github.com/ELEVATE-Project/mentoring/blob/release_3.2.0/src/.env.sample), [User](https://github.com/ELEVATE-Project/user/blob/release-3.2.0/src/.env.sample), [Notification](https://github.com/ELEVATE-Project/notification/blob/release-3.2.0/src/.env.sample), [Scheduler](https://github.com/ELEVATE-Project/scheduler/blob/release-3.2.0/src/.env.sample), and [Interface](https://github.com/ELEVATE-Project/interface-service/blob/main/src/.env.sample) repositories for reference.
 
     > **Caution:** While the default values in the downloaded environment files enable the application to operate, certain features may not function correctly or could be impaired unless the adopter-specific environment variables are properly configured.
     >
-    > For detailed instructions on adjusting these values, please consult the **[Environment Variable Modification Guide](https://github.com/ELEVATE-Project/mentoring/blob/master/documentation/3.2.0/MentorEd-Env-Modification-README.md)**.
+    > For detailed instructions on adjusting these values, please consult the **[Environment Variable Modification Guide](https://github.com/ELEVATE-Project/mentoring/blob/release_3.2.0/documentation/3.2.0/MentorEd-Env-Modification-README.md)**.
 
     > **Important:** As mentioned in the above linked document, the **User SignUp** functionality may be compromised if key environment variables are not set correctly during deployment. If you opt to skip this setup, consider using the sample user account generator detailed in the `Sample User Accounts Generation` section of this document.
 
@@ -644,32 +642,32 @@ Set the following environment variables to connect MentorED's Chat Communication
 ## Add Required forms
 There ar few forms required for mentoting application to run, to add those fallow the below steps
 
- 1. **Download The `create_default_form_sql` and `insert_sample_forms.sh`  Script File:**
+1. **Download The `create_default_form_sql` and `insert_sample_forms.sh`  Script File:**
 
     - **Ubuntu/Linux**
 
         ```
-        mkdir -p sample-data/mentoring && curl -L -o sample-data/mentoring/insert_sample_forms.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/master/documentation/3.2.0/native/scripts/linux/insert_sample_forms.sh && chmod +x sample-data/mentoring/insert_sample_forms.sh && \
-        curl -L -o sample-data/mentoring/create_default_form_sql.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/master/documentation/3.2.0/native/scripts/linux/create_default_form_sql.sh && chmod +x sample-data/mentoring/create_default_form_sql.sh
+        mkdir -p sample-data/mentoring && curl -L -o sample-data/mentoring/insert_sample_forms.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/release_3.2.0/documentation/3.2.0/native/scripts/linux/insert_sample_forms.sh && chmod +x sample-data/mentoring/insert_sample_forms.sh && \
+        curl -L -o sample-data/mentoring/create_default_form_sql.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/release_3.2.0/documentation/3.2.0/native/scripts/linux/create_default_form_sql.sh && chmod +x sample-data/mentoring/create_default_form_sql.sh
 
         ```
 
     - **Mac**
         
         ```
-        mkdir -p sample-data/mentoring && curl -L -o sample-data/mentoring/insert_sample_forms.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/master/documentation/3.2.0/native/scripts/macos/insert_sample_forms.sh && chmod +x sample-data/mentoring/insert_sample_forms.sh && \
-        curl -L -o sample-data/mentoring/create_default_form_sql.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/master/documentation/3.2.0/native/scripts/macos/create_default_form_sql.sh && chmod +x sample-data/mentoring/create_default_form_sql.sh
+        mkdir -p sample-data/mentoring && curl -L -o sample-data/mentoring/insert_sample_forms.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/release_3.2.0/documentation/3.2.0/native/scripts/macos/insert_sample_forms.sh && chmod +x sample-data/mentoring/insert_sample_forms.sh && \
+        curl -L -o sample-data/mentoring/create_default_form_sql.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/release_3.2.0/documentation/3.2.0/native/scripts/macos/create_default_form_sql.sh && chmod +x sample-data/mentoring/create_default_form_sql.sh
         ```
 
     - **Windows**
 
         ```
-        mkdir sample-data\mentoring 2>nul & curl -L -o sample-data/mentoring/create_default_form_sql.bat https://raw.githubusercontent.com/ELEVATE-Project/mentoring/master/documentation/3.2.0/native/scripts/windows/create_default_form_sql.bat
+        mkdir sample-data\mentoring 2>nul & curl -L -o sample-data/mentoring/create_default_form_sql.bat https://raw.githubusercontent.com/ELEVATE-Project/mentoring/release_3.2.0/documentation/3.2.0/native/scripts/windows/create_default_form_sql.bat
 
         ```
         
         ```
-        curl -L -o sample-data/mentoring/insert_sample_forms.bat https://raw.githubusercontent.com/ELEVATE-Project/mentoring/master/documentation/3.2.0/native/scripts/windows/insert_sample_forms.bat
+        curl -L -o sample-data/mentoring/insert_sample_forms.bat https://raw.githubusercontent.com/ELEVATE-Project/mentoring/release_3.2.0/documentation/3.2.0/native/scripts/windows/insert_sample_forms.bat
         ```
 
     2. **Run The `insert_sample_forms` Script File:**
@@ -702,7 +700,7 @@ In such cases, you can generate sample user accounts using the steps below. This
 -   **Ubuntu/Linux**
 
     ```
-    curl -o insert_sample_data.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/master/documentation/3.2.0/native/scripts/linux/insert_sample_data.sh && \
+    curl -o insert_sample_data.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/release_3.2.0/documentation/3.2.0/native/scripts/linux/insert_sample_data.sh && \
     chmod +x insert_sample_data.sh && \
     ./insert_sample_data.sh
     ```
@@ -710,7 +708,7 @@ In such cases, you can generate sample user accounts using the steps below. This
 -   **MacOS**
 
     ```
-    curl -o insert_sample_data.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/master/documentation/3.2.0/native/scripts/macos/insert_sample_data.sh && \
+    curl -o insert_sample_data.sh https://raw.githubusercontent.com/ELEVATE-Project/mentoring/release_3.2.0/documentation/3.2.0/native/scripts/macos/insert_sample_data.sh && \
     chmod +x insert_sample_data.sh && \
     ./insert_sample_data.sh
     ```
@@ -718,7 +716,7 @@ In such cases, you can generate sample user accounts using the steps below. This
 -   **Windows**
 
     ```
-    curl -o insert_sample_data.bat https://raw.githubusercontent.com/ELEVATE-Project/mentoring/master/documentation/3.2.0/native/scripts/windows/insert_sample_data.bat && ^
+    curl -o insert_sample_data.bat https://raw.githubusercontent.com/ELEVATE-Project/mentoring/release_3.2.0/documentation/3.2.0/native/scripts/windows/insert_sample_data.bat && ^
     insert_sample_data.bat
     ```
 

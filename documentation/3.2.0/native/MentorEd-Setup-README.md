@@ -227,7 +227,7 @@ Set the following environment variables to connect MentorED's Chat Communication
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/notification.git && \
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/interface-service.git && \
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/scheduler.git && \
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git && \
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/chat-communications.git
         ```
 
@@ -235,11 +235,12 @@ Set the following environment variables to connect MentorED's Chat Communication
 
         ```
         git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/user.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/notification.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/interface-service.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/scheduler.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/user.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/notification.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/interface-service.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/scheduler.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/chat-communications.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git
         ```
 
 3. **Install NPM Packages**
@@ -252,6 +253,7 @@ Set the following environment variables to connect MentorED's Chat Communication
         cd notification/src && npm install && cd ../.. && \
         cd interface-service/src && npm install && cd ../.. && \
         cd scheduler/src && npm install && cd ../.. && \
+        cd chat-communications/src && npm install && cd ../.. && \
         cd mentoring-mobile-app && npm install --force && cd ..
         ```
 
@@ -263,6 +265,7 @@ Set the following environment variables to connect MentorED's Chat Communication
         cd notification\src & npm install & cd ..\.. & ^
         cd interface-service\src & npm install & cd ..\.. & ^
         cd scheduler\src & npm install & cd ..\.. & ^
+        cd chat-communications\src & npm install & cd ..\.. & ^
         cd mentoring-mobile-app & npm install --force & cd ..
         ```
 
@@ -272,10 +275,12 @@ Set the following environment variables to connect MentorED's Chat Communication
 
         ```
         curl -L -o mentoring/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/mentoring_env && \
+        curl -L -o mentoring/src/config.json https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/mentoring_config.json && \
         curl -L -o user/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/user_env && \
         curl -L -o notification/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/notification_env && \
         curl -L -o interface-service/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/interface_env && \
         curl -L -o scheduler/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/scheduler_env && \
+        curl -L -o chat-communications/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/chat_communications_env && \
         curl -L -o mentoring-mobile-app/src/environments/environment.ts https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/environment.ts
         ```
 
@@ -283,10 +288,12 @@ Set the following environment variables to connect MentorED's Chat Communication
 
         ```
         curl -L -o mentoring/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/mentoring_env && \
+        curl -L -o mentoring/src/config.json https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/mentoring_config.json && \
         curl -L -o user/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/user_env && \
         curl -L -o notification/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/notification_env && \
         curl -L -o interface-service/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/interface_env && \
         curl -L -o scheduler/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/scheduler_env && \
+        curl -L -o chat-communications/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/chat_communications_env && \
         curl -L -o mentoring-mobile-app/src/environments/environment.ts https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/environment.ts
         ```
 
@@ -294,14 +301,16 @@ Set the following environment variables to connect MentorED's Chat Communication
 
         ```
         curl -L -o mentoring\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/mentoring_env & ^
+        curl -L -o mentoring\src\config.json https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/mentoring_config.json & ^
         curl -L -o user\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/user_env & ^
         curl -L -o notification\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/notification_env & ^
         curl -L -o interface-service\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/interface_env & ^
         curl -L -o scheduler\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/scheduler_env & ^
+        curl -L -o chat-communications\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/chat_communications_env & ^
         curl -L -o mentoring-mobile-app\src\environments\environment.ts https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/environment.ts
         ```
 
-    > **Note:** Modify the environment files as necessary for your deployment using any text editor, ensuring that the values are appropriate for your environment. The default values provided in the current files are functional and serve as a good starting point. Refer to the sample env files provided at the [Mentoring](https://github.com/ELEVATE-Project/mentoring/blob/release_3.2.0/src/.env.sample), [User](https://github.com/ELEVATE-Project/user/blob/release_3.2.0/src/.env.sample), [Notification](https://github.com/ELEVATE-Project/notification/blob/release_3.2.0/src/.env.sample), [Scheduler](https://github.com/ELEVATE-Project/scheduler/blob/release_3.2.0/src/.env.sample), and [Interface](https://github.com/ELEVATE-Project/interface-service/blob/main/src/.env.sample) repositories for reference.
+    > **Note:** Modify the environment files as necessary for your deployment using any text editor, ensuring that the values are appropriate for your environment. The default values provided in the current files are functional and serve as a good starting point. Refer to the sample env files provided at the [Mentoring](https://github.com/ELEVATE-Project/mentoring/blob/release_3.2.0/src/.env.sample), [User](https://github.com/ELEVATE-Project/user/blob/release-3.2.0/src/.env.sample), [Notification](https://github.com/ELEVATE-Project/notification/blob/release-3.2.0/src/.env.sample), [Scheduler](https://github.com/ELEVATE-Project/scheduler/blob/release-3.2.0/src/.env.sample), and [Interface](https://github.com/ELEVATE-Project/interface-service/blob/main/src/.env.sample) repositories for reference.
 
     > **Caution:** While the default values in the downloaded environment files enable the application to operate, certain features may not function correctly or could be impaired unless the adopter-specific environment variables are properly configured.
     >
@@ -362,7 +371,8 @@ Set the following environment variables to connect MentorED's Chat Communication
             ```
             cd mentoring/src && npx sequelize-cli db:migrate && cd ../.. && \
             cd user/src && npx sequelize-cli db:migrate && cd ../.. && \
-            cd notification/src && npx sequelize-cli db:migrate && cd ../..
+            cd notification/src && npx sequelize-cli db:migrate && cd ../.. && \
+            cd chat-communications/src && npx sequelize-cli db:migrate && cd ../..
             ```
 
     - **Windows**
@@ -374,7 +384,8 @@ Set the following environment variables to connect MentorED's Chat Communication
             ```
             cd mentoring/src & npx sequelize-cli db:migrate & cd ../.. && ^
             cd user/src & npx sequelize-cli db:migrate & cd ../.. & ^
-            cd notification/src & npx sequelize-cli db:migrate & cd ../..
+            cd notification/src & npx sequelize-cli db:migrate & cd ../.. & ^
+            cd chat-communications/src & npx sequelize-cli db:migrate & cd ../..
             ```
 
 7. **Enabling Citus And Setting Distribution Columns (Optional)**
@@ -447,7 +458,8 @@ Set the following environment variables to connect MentorED's Chat Communication
         cd user/src && pm2 start app.js -i 2 --name mentored-user && cd ../.. && \
         cd notification/src && pm2 start app.js -i 2 --name mentored-notification && cd ../.. && \
         cd interface-service/src && pm2 start app.js -i 2 --name mentored-interface && cd ../.. && \
-        cd scheduler/src && pm2 start app.js -i 2 --name mentored-scheduler && cd ../..
+        cd scheduler/src && pm2 start app.js -i 2 --name mentored-scheduler && cd ../.. && \
+        cd chat-communications/src && pm2 start app.js -i 2 --name mentored-communications && cd ../..
         ```
 
     - **MacOS**
@@ -457,7 +469,8 @@ Set the following environment variables to connect MentorED's Chat Communication
         cd user/src && npx pm2 start app.js -i 2 --name mentored-user && cd ../.. && \
         cd notification/src && npx pm2 start app.js -i 2 --name mentored-notification && cd ../.. && \
         cd interface-service/src && npx pm2 start app.js -i 2 --name mentored-interface && cd ../.. && \
-        cd scheduler/src && npx pm2 start app.js -i 2 --name mentored-scheduler && cd ../..
+        cd scheduler/src && npx pm2 start app.js -i 2 --name mentored-scheduler && cd ../.. && \
+        cd chat-communications/src && npx pm2 start app.js -i 2 --name mentored-communications && cd ../..
         ```
 
     - **Windows**
@@ -466,7 +479,8 @@ Set the following environment variables to connect MentorED's Chat Communication
         cd user/src && pm2 start app.js -i 2 --name mentored-user && cd ../.. && ^
         cd notification/src && pm2 start app.js -i 2 --name mentored-notification && cd ../.. && ^
         cd interface-service/src && pm2 start app.js -i 2 --name mentored-interface && cd ../.. && ^
-        cd scheduler/src && pm2 start app.js -i 2 --name mentored-scheduler && cd ../..
+        cd scheduler/src && pm2 start app.js -i 2 --name mentored-scheduler && cd ../.. && ^
+        cd chat-communications/src && pm2 start app.js -i 2 --name mentored-communications && cd ../..
         ```
 
 10. **Run Service Scripts**
@@ -478,17 +492,37 @@ Set the following environment variables to connect MentorED's Chat Communication
         ```
         cd user/src/scripts && node insertDefaultOrg.js && node viewsScript.js && \
         node -r module-alias/register uploadSampleCSV.js && cd ../../.. && \
-        cd mentoring/src/scripts && node psqlFunction.js && node viewsScript.js &&  node -r module-alias/register sessionUploadScript.js && cd ../../..
+        cd mentoring/src/scripts && node psqlFunction.js && node viewsScript.js &&  node -r module-alias/register sessionUploadScript.js && cd ../../.. && \
+        cd chat-communications/src/scripts && node updateRCSettings.js && cd ../../..
         ```
 
     - **Windows**
         ```
         cd user/src/scripts & node insertDefaultOrg.js & node viewsScript.js & ^
         node -r module-alias/register uploadSampleCSV.js & cd ../../.. && ^
-        cd mentoring/src/scripts & node psqlFunction.js & node viewsScript.js & node -r module-alias/register sessionUploadScript.js & cd ../../..
+        cd mentoring/src/scripts & node psqlFunction.js & node viewsScript.js &  node -r module-alias/register sessionUploadScript.js & cd ../../.. && ^
+        cd chat-communications/src/scripts & node updateRCSettings.js & cd ../../..
         ```
 
-11. **Start The Portal**
+11. **Post-Setup Configuration**
+
+    After all services are running, execute the following query against the User Service database to disable the Self-Creation Portal (SCP) feature:
+
+    - **Ubuntu/Linux/MacOS**
+
+        ```
+        psql -U postgres -d users -c "UPDATE public.organization_features SET enabled = false WHERE feature_code = 'scp';"
+        ```
+
+    - **Windows**
+
+        ```
+        psql -U postgres -d users -c "UPDATE public.organization_features SET enabled = false WHERE feature_code = 'scp';"
+        ```
+
+    > **Note:** For Linux (Citus) installations, use port `9700`: `psql -p 9700 -U postgres -d users -c "..."`
+
+12. **Start The Portal**
 
     The portal utilizes Ionic and Angular CLI for building the browser bundle, follow the steps given below to install them and start the portal.
 
@@ -608,7 +642,7 @@ Set the following environment variables to connect MentorED's Chat Communication
 ## Add Required forms
 There ar few forms required for mentoting application to run, to add those fallow the below steps
 
- 1. **Download The `create_default_form_sql` and `insert_sample_forms.sh`  Script File:**
+1. **Download The `create_default_form_sql` and `insert_sample_forms.sh`  Script File:**
 
     - **Ubuntu/Linux**
 
