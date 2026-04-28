@@ -10,138 +10,7 @@ Before setting up the application, the dependencies should be installed and veri
 
 ### Setting Up Rocket.Chat
 
----
-
-#### Ubuntu/Linux — Native Bundle Install
-
-The steps below install Rocket.Chat 6.12.0 natively. Refer to the [official deployment guide](https://docs.rocket.chat/docs/deploy-with-ubuntu) for additional details.
-
-**Step 1: Install MongoDB**
-
-Refer to the [official MongoDB documentation](https://www.mongodb.com/docs/manual/administration/install-on-linux/) to install MongoDB, then configure a replica set.
-
-Edit `/etc/mongod.conf` to add the replication settings:
-
-```yaml
-replication:
-  replSetName: rs01
-```
-
-Start MongoDB and initialise the replica set:
-
-```bash
-sudo systemctl enable --now mongod
-sudo systemctl restart mongod
-mongosh --eval "printjson(rs.initiate())"
-```
-
-**Step 2: Install Rocket.Chat**
-
-```bash
-sudo apt install -y curl build-essential graphicsmagick
-curl -L https://releases.rocket.chat/6.12.0/download -o /tmp/rocket.chat.tgz
-tar -xzf /tmp/rocket.chat.tgz -C /tmp
-cd /tmp/bundle/programs/server && npm install --production
-sudo mv /tmp/bundle /opt/Rocket.Chat
-```
-
-**Step 3: Create the service user and set permissions**
-
-```bash
-sudo useradd -M rocketchat && sudo usermod -L rocketchat
-sudo chown -R rocketchat:rocketchat /opt/Rocket.Chat
-```
-
-**Step 4: Create the systemd service**
-
-```bash
-NODE_PATH=$(which node)
-cat << EOF | sudo tee /lib/systemd/system/rocketchat.service
-[Unit]
-Description=The Rocket.Chat server
-After=network.target remote-fs.target nss-lookup.target mongod.service
-[Service]
-ExecStart=$NODE_PATH /opt/Rocket.Chat/main.js
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=rocketchat
-User=rocketchat
-[Install]
-WantedBy=multi-user.target
-EOF
-```
-
-**Step 5: Configure environment variables**
-
-Open the service override file:
-
-```bash
-sudo systemctl edit rocketchat
-```
-
-Add the following and save:
-
-```
-[Service]
-Environment=ROOT_URL=http://localhost:3969
-Environment=PORT=3969
-Environment=MONGO_URL=mongodb://localhost:27017/rocketchat?replicaSet=rs01
-```
-
-**Step 6: Start Rocket.Chat**
-
-```bash
-sudo systemctl enable --now rocketchat
-```
-
-Verify it is running:
-
-```bash
-curl -s http://localhost:3969/api/v1/info | grep -o '"version":"[^"]*"'
-```
-
-**Step 7: Complete Initial Setup**
-
-Open **http://localhost:3969** in a browser and follow the setup wizard to create the admin account. Note the admin username, password, and email.
-
-**Step 8: Get the Admin Access Token and User ID**
-
-```bash
-curl -s -X POST http://localhost:3969/api/v1/login \
-  -H "Content-Type: application/json" \
-  -d '{"user": "<your-admin-username>", "password": "<your-admin-password>"}'
-```
-
-From the response, note `data.authToken` and `data.userId`:
-
-```json
-{
-  "status": "success",
-  "data": {
-    "userId": "<copy this value>",
-    "authToken": "<copy this value>"
-  }
-}
-```
-
-**Step 9: Update the Chat Communications Environment File**
-
-Update `chat-communications/src/.env`:
-
-```
-CHAT_PLATFORM=rocketchat
-CHAT_PLATFORM_URL=http://localhost:3969
-CHAT_PLATFORM_ADMIN_EMAIL=<your-admin-email>
-CHAT_PLATFORM_ADMIN_PASSWORD=<your-admin-password>
-CHAT_PLATFORM_ACCESS_TOKEN=<data.authToken from step 8>
-CHAT_PLATFORM_ADMIN_USER_ID=<data.userId from step 8>
-```
-
----
-
-#### macOS / Windows — Install via Docker
-
-Rocket.Chat does not provide a native installer for macOS or Windows. Use Docker to run it locally for development.
+Rocket.Chat requires Docker to run. Ensure Docker is installed on your system before proceeding.
 
 **Step 1: Start Rocket.Chat and its MongoDB**
 
@@ -159,7 +28,11 @@ Verify it is running:
 curl -s http://localhost:3969/api/v1/info | grep -o '"version":"[^"]*"'
 ```
 
-**Step 2: Get the Admin Access Token and User ID**
+**Step 2: Complete Initial Setup**
+
+Open **http://localhost:3969** in a browser and follow the setup wizard to create the admin account.
+
+**Step 3: Get the Admin Access Token and User ID**
 
 The default admin credentials are `admin` / `Admin@1234`. Retrieve the token:
 
@@ -181,7 +54,7 @@ From the response, note `data.authToken` and `data.userId`:
 }
 ```
 
-**Step 3: Update the Chat Communications Environment File**
+**Step 4: Update the Chat Communications Environment File**
 
 Update `chat-communications/src/.env`:
 
@@ -190,8 +63,8 @@ CHAT_PLATFORM=rocketchat
 CHAT_PLATFORM_URL=http://localhost:3969
 CHAT_PLATFORM_ADMIN_EMAIL=admin@elevate.local
 CHAT_PLATFORM_ADMIN_PASSWORD=Admin@1234
-CHAT_PLATFORM_ACCESS_TOKEN=<data.authToken from step 2>
-CHAT_PLATFORM_ADMIN_USER_ID=<data.userId from step 2>
+CHAT_PLATFORM_ACCESS_TOKEN=<data.authToken from step 3>
+CHAT_PLATFORM_ADMIN_USER_ID=<data.userId from step 3>
 ```
 
 ---
