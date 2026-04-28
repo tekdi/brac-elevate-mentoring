@@ -6,7 +6,62 @@ Expectation: Upon following the prescribed steps, you will achieve a fully opera
 
 Before setting up the application, the dependencies should be installed and verified to be running. Refer to the following steps to install them and verify:
 
-> **Note:** Version 3.2 introduces a Chat Communication Service that requires a running **Rocket.Chat** instance. Set up Rocket.Chat before starting the services. Refer to the [Rocket.Chat Deployment Documentation](https://docs.rocket.chat/deploy) for detailed instructions. Once deployed, update `CHAT_PLATFORM_URL`, `CHAT_PLATFORM_ADMIN_EMAIL`, `CHAT_PLATFORM_ADMIN_PASSWORD`, `CHAT_PLATFORM_ACCESS_TOKEN`, and `CHAT_PLATFORM_ADMIN_USER_ID` in the `chat-communications/src/.env` file.
+> **Note:** Version 3.2 introduces a Chat Communication Service that requires a running **Rocket.Chat** instance. Complete the Rocket.Chat setup below before proceeding with the rest of the installation.
+
+### Setting Up Rocket.Chat
+
+The repository includes a `docker-compose.yml` that sets up Rocket.Chat and its required MongoDB instance. Use it to get Rocket.Chat running quickly.
+
+#### 1. Start Rocket.Chat and MongoDB
+
+From the root of the repository, run:
+
+```bash
+docker compose up -d rocketchat_mongodb rocketchat
+```
+
+> Rocket.Chat will be available at **http://localhost:3969** once the containers are healthy (may take 1–2 minutes).
+
+Verify it is running:
+
+```bash
+curl -s http://localhost:3969/api/v1/info | grep -o '"version":"[^"]*"'
+```
+
+#### 2. Get the Admin Access Token and User ID
+
+Retrieve the admin credentials needed for the Chat Communications service:
+
+```bash
+curl -s -X POST http://localhost:3969/api/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"user": "admin", "password": "Admin@1234"}'
+```
+
+From the response, note `data.authToken` and `data.userId`:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "userId": "<copy this value>",
+    "authToken": "<copy this value>"
+  }
+}
+```
+
+#### 3. Update the Chat Communications Environment File
+
+Update `chat-communications/src/.env` with the values obtained above:
+
+```
+CHAT_PLATFORM=rocketchat
+CHAT_PLATFORM_URL=http://localhost:3969
+CHAT_PLATFORM_ADMIN_EMAIL=admin@elevate.local
+CHAT_PLATFORM_ADMIN_PASSWORD=Admin@1234
+CHAT_PLATFORM_ACCESS_TOKEN=<data.authToken from step 2>
+CHAT_PLATFORM_ADMIN_USER_ID=<data.userId from step 2>
+```
 
 -   **Ubuntu/Linux**
 
