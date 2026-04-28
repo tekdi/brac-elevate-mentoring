@@ -40,17 +40,6 @@ Before setting up the application, the dependencies should be installed and veri
 
         > Warning: This script should only be used to uninstall dependencies that were installed via installation script in step 3. If same dependencies were installed using other methods, refrain from using this script. This script is provided in-order to reverse installation in-case issues arise from a bad install.
 
-    5. Install Docker:
-
-        ```
-        sudo apt-get update
-        sudo apt-get install -y docker.io docker-compose-plugin
-        sudo systemctl enable --now docker
-        sudo usermod -aG docker $USER
-        ```
-
-        > Note: Log out and log back in (or run `newgrp docker`) for the group change to take effect.
-
 -   **MacOS**
 
     1. Install Node.js 20:
@@ -99,18 +88,14 @@ Before setting up the application, the dependencies should be installed and veri
         brew services start redis
         ```
 
-    6. Install Docker Desktop:
-
-        Download and install [Docker Desktop for Mac](https://docs.docker.com/desktop/setup/install/mac-install/), then start Docker Desktop.
-
-    7. Download `check-dependencies.sh` file:
+    6. Download `check-dependencies.sh` file:
 
         ```
         curl -OJL https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/scripts/macos/check-dependencies.sh && \
         chmod +x check-dependencies.sh
         ```
 
-    8. Verify installed dependencies by running `check-dependencies.sh`:
+    7. Verify installed dependencies by running `check-dependencies.sh`:
 
         ```
         ./check-dependencies.sh
@@ -189,68 +174,42 @@ Before setting up the application, the dependencies should be installed and veri
 
         2. Once installed, Add `C:\Program Files\PostgreSQL\16\bin` to windows environment variables. Refer [here](https://www.computerhope.com/issues/ch000549.htm) or [here](https://stackoverflow.com/a/68851621) for more information regarding how to set it.
 
-    6. Install Docker Desktop:
+### Rocket.Chat (Required for Chat Communications Service)
 
-        Download and install [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/), then start Docker Desktop.
+Version 3.2 introduces a Chat Communications Service that integrates with **Rocket.Chat**. You must have a running Rocket.Chat instance before starting the MentorED services.
 
-### Setting Up Rocket.Chat
+**Install Rocket.Chat Community Edition**
 
-Version 3.2 requires a running **Rocket.Chat** instance for the Chat Communications Service. Rocket.Chat runs via Docker (installed above).
+Install the **Community Edition** of Rocket.Chat by following the official deployment guide for your platform:
+[https://docs.rocket.chat/docs/deploy](https://docs.rocket.chat/docs/deploy)
 
-**Step 1: Start Rocket.Chat and its MongoDB**
+Once installed and running, complete the initial setup wizard to create an admin account.
 
-From the root of the mentoring repository, run:
+**Obtain Admin Credentials for MentorED Configuration**
 
-```bash
-docker compose -f docker-compose-rocketchat.yml up -d
-```
-
-> Rocket.Chat will be available at **http://localhost:3969** once the containers are healthy (may take 1–2 minutes).
-
-Verify it is running:
-
-```bash
-curl -s http://localhost:3969/api/v1/info | grep -o '"version":"[^"]*"'
-```
-
-**Step 2: Complete Initial Setup**
-
-Open **http://localhost:3969** in a browser and follow the setup wizard to create the admin account.
-
-**Step 3: Get the Admin Access Token and User ID**
-
-The default admin credentials are `admin` / `Admin@1234`. Retrieve the token:
-
-```bash
-curl -s -X POST http://localhost:3969/api/v1/login \
-  -H "Content-Type: application/json" \
-  -d '{"user": "admin", "password": "Admin@1234"}'
-```
-
-From the response, note `data.authToken` and `data.userId`:
-
-```json
-{
-  "status": "success",
-  "data": {
-    "userId": "<copy this value>",
-    "authToken": "<copy this value>"
-  }
-}
-```
-
-**Step 4: Update the Chat Communications Environment File**
-
-Update `chat-communications/src/.env`:
+After setup, retrieve the admin `authToken` and `userId` by calling the Rocket.Chat login API:
 
 ```
-CHAT_PLATFORM=rocketchat
-CHAT_PLATFORM_URL=http://localhost:3969
-CHAT_PLATFORM_ADMIN_EMAIL=admin@elevate.local
-CHAT_PLATFORM_ADMIN_PASSWORD=Admin@1234
-CHAT_PLATFORM_ACCESS_TOKEN=<data.authToken from step 3>
-CHAT_PLATFORM_ADMIN_USER_ID=<data.userId from step 3>
+POST <your-rocketchat-url>/api/v1/login
+Body: { "user": "<admin-username>", "password": "<admin-password>" }
 ```
+
+The response will contain:
+- `data.authToken` — the admin access token
+- `data.userId` — the admin user ID
+
+**Configure `chat-communications/src/.env`**
+
+Set the following environment variables to connect MentorED's Chat Communications Service to your Rocket.Chat instance:
+
+| Variable | Description |
+|----------|-------------|
+| `CHAT_PLATFORM` | Set to `rocketchat` |
+| `CHAT_PLATFORM_URL` | Base URL of your Rocket.Chat instance (e.g. `http://localhost:3000`) |
+| `CHAT_PLATFORM_ADMIN_EMAIL` | Admin email address |
+| `CHAT_PLATFORM_ADMIN_PASSWORD` | Admin password |
+| `CHAT_PLATFORM_ACCESS_TOKEN` | `data.authToken` from the login API response |
+| `CHAT_PLATFORM_ADMIN_USER_ID` | `data.userId` from the login API response |
 
 ## Installation
 
