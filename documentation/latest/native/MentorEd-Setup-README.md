@@ -10,9 +10,77 @@ Before setting up the application, the dependencies should be installed and veri
 
 ### Setting Up Rocket.Chat
 
-The repository includes a `docker-compose.yml` that sets up Rocket.Chat and its required MongoDB instance. Use it to get Rocket.Chat running quickly.
+---
 
-#### 1. Start Rocket.Chat and MongoDB
+#### Ubuntu/Linux — Install via Snap
+
+Snap is the officially supported native installation method for Rocket.Chat on Linux.
+
+**Step 1: Install Rocket.Chat**
+
+```bash
+sudo snap install rocketchat-server --channel=6.x/stable
+```
+
+By default, Rocket.Chat runs on port `3000`. To change it to `3969`:
+
+```bash
+sudo snap set rocketchat-server port=3969
+sudo snap restart rocketchat-server
+```
+
+> Rocket.Chat will be available at **http://localhost:3969** once the service starts (may take 1–2 minutes).
+
+Verify it is running:
+
+```bash
+curl -s http://localhost:3969/api/v1/info | grep -o '"version":"[^"]*"'
+```
+
+**Step 2: Complete Initial Setup**
+
+Open **http://localhost:3969** in a browser and follow the setup wizard to create the admin account. Note the admin username, password, and email you set — you will need these in Step 3.
+
+**Step 3: Get the Admin Access Token and User ID**
+
+```bash
+curl -s -X POST http://localhost:3969/api/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"user": "<your-admin-username>", "password": "<your-admin-password>"}'
+```
+
+From the response, note `data.authToken` and `data.userId`:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "userId": "<copy this value>",
+    "authToken": "<copy this value>"
+  }
+}
+```
+
+**Step 4: Update the Chat Communications Environment File**
+
+Update `chat-communications/src/.env` with the values obtained above:
+
+```
+CHAT_PLATFORM=rocketchat
+CHAT_PLATFORM_URL=http://localhost:3969
+CHAT_PLATFORM_ADMIN_EMAIL=<your-admin-email>
+CHAT_PLATFORM_ADMIN_PASSWORD=<your-admin-password>
+CHAT_PLATFORM_ACCESS_TOKEN=<data.authToken from step 3>
+CHAT_PLATFORM_ADMIN_USER_ID=<data.userId from step 3>
+```
+
+---
+
+#### macOS / Windows — Install via Docker
+
+Rocket.Chat does not have an official native installer for macOS or Windows. Use Docker to run it.
+
+**Step 1: Start Rocket.Chat and MongoDB**
 
 From the root of the repository, run:
 
@@ -28,9 +96,9 @@ Verify it is running:
 curl -s http://localhost:3969/api/v1/info | grep -o '"version":"[^"]*"'
 ```
 
-#### 2. Get the Admin Access Token and User ID
+**Step 2: Get the Admin Access Token and User ID**
 
-Retrieve the admin credentials needed for the Chat Communications service:
+The default admin credentials are set in `docker-compose.yml` (`ADMIN_USERNAME=admin`, `ADMIN_PASS=Admin@1234`). Retrieve the token:
 
 ```bash
 curl -s -X POST http://localhost:3969/api/v1/login \
@@ -50,7 +118,7 @@ From the response, note `data.authToken` and `data.userId`:
 }
 ```
 
-#### 3. Update the Chat Communications Environment File
+**Step 3: Update the Chat Communications Environment File**
 
 Update `chat-communications/src/.env` with the values obtained above:
 
@@ -62,6 +130,8 @@ CHAT_PLATFORM_ADMIN_PASSWORD=Admin@1234
 CHAT_PLATFORM_ACCESS_TOKEN=<data.authToken from step 2>
 CHAT_PLATFORM_ADMIN_USER_ID=<data.userId from step 2>
 ```
+
+---
 
 -   **Ubuntu/Linux**
 
