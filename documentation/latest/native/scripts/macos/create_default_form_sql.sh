@@ -62,7 +62,7 @@ echo "delete from forms;" > "$DUMP_FILE"
 
 # Fetch the JSON file from the GitHub repository
 echo "Fetching JSON file from GitHub..."
-curl -o $JSON_FILE $GITHUB_REPO
+curl -fSL -o $JSON_FILE $GITHUB_REPO
 
 # Check if the download was successful
 if [ $? -ne 0 ]; then

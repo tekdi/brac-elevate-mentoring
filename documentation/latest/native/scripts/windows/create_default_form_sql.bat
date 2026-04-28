@@ -26,7 +26,7 @@ set "SQL_OUTPUT_FILE=%OUTPUT_DIR%\forms.sql"
 
 :: Fetch JSON file from GitHub and save it in the correct location
 echo Fetching JSON file from GitHub...
-curl -o "%JSON_FILE%" "%GITHUB_REPO%"
+curl -fSL -o "%JSON_FILE%" "%GITHUB_REPO%"
 
 :: Check if download was successful
 if errorlevel 1 (
