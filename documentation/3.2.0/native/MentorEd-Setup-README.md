@@ -639,8 +639,8 @@ Set the following environment variables to connect MentorED's Chat Communication
 
     Navigate to http://localhost:7601 to access the portal.
 
-## Add Required forms
-There ar few forms required for mentoting application to run, to add those fallow the below steps
+## Add Required Forms
+There are a few forms required for the mentoring application to run. To add those, follow the steps below.
 
 1. **Download The `create_default_form_sql` and `insert_sample_forms.sh`  Script File:**
 

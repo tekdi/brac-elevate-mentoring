@@ -14,14 +14,15 @@ CHAT_PLATFORM_ACCESS_TOKEN=
 CHAT_PLATFORM_ADMIN_USER_ID=
 
 # Internal Access Token (must match INTERNAL_ACCESS_TOKEN in mentoring service)
-INTERNAL_ACCESS_TOKEN=internal_access_token
+# Replace with a secure random value
+INTERNAL_ACCESS_TOKEN=
 
 # Database URL
 DEV_DATABASE_URL=postgres://postgres:postgres@localhost:5432/communications
 
-# Hashing Configuration (Replace with secure random salts in production)
-USERNAME_HASH_SALT=username_hash_salt_default
-PASSWORD_HASH_SALT=password_hash_salt_default
+# Hashing Configuration (Replace with cryptographically random salts)
+USERNAME_HASH_SALT=
+PASSWORD_HASH_SALT=
 
 USERNAME_HASH_LENGTH=8
 PASSWORD_HASH_LENGTH=8

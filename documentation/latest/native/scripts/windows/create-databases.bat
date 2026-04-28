@@ -24,9 +24,14 @@ if errorlevel 1 (
 
 echo Assigning privileges to mentoring database...
 psql -p 5432 -U postgres -d mentoring -c "GRANT ALL PRIVILEGES ON DATABASE mentoring TO postgres;"
+if errorlevel 1 (
+    echo Failed to grant database privileges on mentoring database.
+    exit /b 1
+)
 psql -p 5432 -U postgres -d mentoring -c "GRANT ALL ON SCHEMA public TO postgres;"
 if errorlevel 1 (
     echo Failed to assign privileges to mentoring database.
+    exit /b 1
 ) else (
     echo Privileges assigned to mentoring database successfully.
 )
@@ -41,9 +46,14 @@ if errorlevel 1 (
 
 echo Assigning privileges to users database...
 psql -p 5432 -U postgres -d users -c "GRANT ALL PRIVILEGES ON DATABASE users TO postgres;"
+if errorlevel 1 (
+    echo Failed to grant database privileges on users database.
+    exit /b 1
+)
 psql -p 5432 -U postgres -d users -c "GRANT ALL ON SCHEMA public TO postgres;"
 if errorlevel 1 (
     echo Failed to assign privileges to users database.
+    exit /b 1
 ) else (
     echo Privileges assigned to users database successfully.
 )
@@ -58,9 +68,14 @@ if errorlevel 1 (
 
 echo Assigning privileges to notification database...
 psql -p 5432 -U postgres -d notification -c "GRANT ALL PRIVILEGES ON DATABASE notification TO postgres;"
+if errorlevel 1 (
+    echo Failed to grant database privileges on notification database.
+    exit /b 1
+)
 psql -p 5432 -U postgres -d notification -c "GRANT ALL ON SCHEMA public TO postgres;"
 if errorlevel 1 (
     echo Failed to assign privileges to notification database.
+    exit /b 1
 ) else (
     echo Privileges assigned to notification database successfully.
 )
@@ -75,9 +90,14 @@ if errorlevel 1 (
 
 echo Assigning privileges to communications database...
 psql -p 5432 -U postgres -d communications -c "GRANT ALL PRIVILEGES ON DATABASE communications TO postgres;"
+if errorlevel 1 (
+    echo Failed to grant database privileges on communications database.
+    exit /b 1
+)
 psql -p 5432 -U postgres -d communications -c "GRANT ALL ON SCHEMA public TO postgres;"
 if errorlevel 1 (
     echo Failed to assign privileges to communications database.
+    exit /b 1
 ) else (
     echo Privileges assigned to communications database successfully.
 )

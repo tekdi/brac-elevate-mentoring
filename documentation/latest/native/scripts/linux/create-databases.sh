@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Run commands as the postgres user
 sudo -u postgres psql -p 9700 -c "CREATE USER postgres WITH ENCRYPTED PASSWORD 'postgres';"
