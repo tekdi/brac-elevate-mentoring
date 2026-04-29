@@ -178,9 +178,9 @@ Before setting up the application, the dependencies should be installed and veri
 
 Version 3.2 introduces a Chat Communications Service that integrates with **Rocket.Chat**. You must have a running Rocket.Chat instance before starting the MentorED services.
 
-**Install Rocket.Chat Community Edition**
+**Install Rocket.Chat Community Edition (v6.6.1)**
 
-Install the **Community Edition** of Rocket.Chat by following the official deployment guide for your platform:
+Install **Rocket.Chat Community Edition v6.6.1** by following the official deployment guide for your platform:
 [https://docs.rocket.chat/docs/deploy](https://docs.rocket.chat/docs/deploy)
 
 Once installed and running, complete the initial setup wizard to create an admin account.
