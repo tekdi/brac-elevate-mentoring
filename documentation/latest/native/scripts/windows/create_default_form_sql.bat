@@ -2,7 +2,7 @@
 setlocal
 
 :: Define the GitHub raw URL for the JSON file
-set "GITHUB_REPO=https://raw.githubusercontent.com/ELEVATE-Project/mentoring-mobile-app/refs/heads/release-3.1.1/forms.json"
+set "GITHUB_REPO=https://raw.githubusercontent.com/ELEVATE-Project/mentoring-mobile-app/refs/heads/release-3.2.0/forms.json"
 set "JSON_FILE=sample-data\mentoring\forms.json"  
 
 :: Set organization_id
@@ -26,7 +26,7 @@ set "SQL_OUTPUT_FILE=%OUTPUT_DIR%\forms.sql"
 
 :: Fetch JSON file from GitHub and save it in the correct location
 echo Fetching JSON file from GitHub...
-curl -o "%JSON_FILE%" "%GITHUB_REPO%"
+curl -fSL -o "%JSON_FILE%" "%GITHUB_REPO%"
 
 :: Check if download was successful
 if errorlevel 1 (

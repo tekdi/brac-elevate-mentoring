@@ -4,7 +4,7 @@
 set -e
 
 # Define the GitHub raw URL for the JSON file
-GITHUB_REPO="https://raw.githubusercontent.com/ELEVATE-Project/mentoring-mobile-app/refs/heads/release-3.1.1/forms.json"
+GITHUB_REPO="https://raw.githubusercontent.com/ELEVATE-Project/mentoring-mobile-app/refs/heads/release-3.2.0/forms.json"
 JSON_FILE="forms.json"  # The name to save the downloaded file
 
 
@@ -62,7 +62,7 @@ echo "delete from forms;" > "$DUMP_FILE"
 
 # Fetch the JSON file from the GitHub repository
 echo "Fetching JSON file from GitHub..."
-curl -o $JSON_FILE $GITHUB_REPO
+curl -fSL -o $JSON_FILE $GITHUB_REPO
 
 # Check if the download was successful
 if [ $? -ne 0 ]; then

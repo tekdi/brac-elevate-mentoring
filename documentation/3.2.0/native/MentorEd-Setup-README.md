@@ -87,15 +87,6 @@ Before setting up the application, the dependencies should be installed and veri
         ```
         brew services start redis
         ```
-    6. Install Mongo:
-
-        ```
-        brew install mongodb-community@5.0
-        ```
-
-        ```
-        brew services start mongodb-community@5.0
-        ```
 
     6. Download `check-dependencies.sh` file:
 
@@ -183,6 +174,43 @@ Before setting up the application, the dependencies should be installed and veri
 
         2. Once installed, Add `C:\Program Files\PostgreSQL\16\bin` to windows environment variables. Refer [here](https://www.computerhope.com/issues/ch000549.htm) or [here](https://stackoverflow.com/a/68851621) for more information regarding how to set it.
 
+### Rocket.Chat (Required for Chat Communications Service)
+
+Version 3.2 introduces a Chat Communications Service that integrates with **Rocket.Chat**. You must have a running Rocket.Chat instance before starting the MentorED services.
+
+**Install Rocket.Chat Community Edition (v6.6.1)**
+
+Install **Rocket.Chat Community Edition v6.6.1** by following the official deployment guide for your platform:
+[https://docs.rocket.chat/docs/deploy](https://docs.rocket.chat/docs/deploy)
+
+Once installed and running, complete the initial setup wizard to create an admin account.
+
+**Obtain Admin Credentials for MentorED Configuration**
+
+After setup, retrieve the admin `authToken` and `userId` by calling the Rocket.Chat login API:
+
+```
+POST <your-rocketchat-url>/api/v1/login
+Body: { "user": "<admin-username>", "password": "<admin-password>" }
+```
+
+The response will contain:
+- `data.authToken` — the admin access token
+- `data.userId` — the admin user ID
+
+**Configure `chat-communications/src/.env`**
+
+Set the following environment variables to connect MentorED's Chat Communications Service to your Rocket.Chat instance:
+
+| Variable | Description |
+|----------|-------------|
+| `CHAT_PLATFORM` | Set to `rocketchat` |
+| `CHAT_PLATFORM_URL` | Base URL of your Rocket.Chat instance (e.g. `http://localhost:3000`) |
+| `CHAT_PLATFORM_ADMIN_EMAIL` | Admin email address |
+| `CHAT_PLATFORM_ADMIN_PASSWORD` | Admin password |
+| `CHAT_PLATFORM_ACCESS_TOKEN` | `data.authToken` from the login API response |
+| `CHAT_PLATFORM_ADMIN_USER_ID` | `data.userId` from the login API response |
+
 ## Installation
 
 1. **Create Mentoring Directory:** Create a directory named **mentorEd**.
@@ -199,7 +227,7 @@ Before setting up the application, the dependencies should be installed and veri
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/notification.git && \
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/interface-service.git && \
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/scheduler.git && \
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git && \
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git && \
         git clone -b release-3.2.0 https://github.com/ELEVATE-Project/chat-communications.git
         ```
 
@@ -207,11 +235,12 @@ Before setting up the application, the dependencies should be installed and veri
 
         ```
         git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/user.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/notification.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/interface-service.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/scheduler.git & ^
-        git clone -b release_3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/user.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/notification.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/interface-service.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/scheduler.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/chat-communications.git & ^
+        git clone -b release-3.2.0 https://github.com/ELEVATE-Project/mentoring-mobile-app.git
         ```
 
 3. **Install NPM Packages**
@@ -224,6 +253,7 @@ Before setting up the application, the dependencies should be installed and veri
         cd notification/src && npm install && cd ../.. && \
         cd interface-service/src && npm install && cd ../.. && \
         cd scheduler/src && npm install && cd ../.. && \
+        cd chat-communications/src && npm install && cd ../.. && \
         cd mentoring-mobile-app && npm install --force && cd ..
         ```
 
@@ -235,6 +265,7 @@ Before setting up the application, the dependencies should be installed and veri
         cd notification\src & npm install & cd ..\.. & ^
         cd interface-service\src & npm install & cd ..\.. & ^
         cd scheduler\src & npm install & cd ..\.. & ^
+        cd chat-communications\src & npm install & cd ..\.. & ^
         cd mentoring-mobile-app & npm install --force & cd ..
         ```
 
@@ -244,10 +275,12 @@ Before setting up the application, the dependencies should be installed and veri
 
         ```
         curl -L -o mentoring/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/mentoring_env && \
+        curl -L -o mentoring/src/config.json https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/mentoring_config.json && \
         curl -L -o user/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/user_env && \
         curl -L -o notification/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/notification_env && \
         curl -L -o interface-service/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/interface_env && \
         curl -L -o scheduler/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/scheduler_env && \
+        curl -L -o chat-communications/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/chat_communications_env && \
         curl -L -o mentoring-mobile-app/src/environments/environment.ts https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/environment.ts
         ```
 
@@ -255,10 +288,12 @@ Before setting up the application, the dependencies should be installed and veri
 
         ```
         curl -L -o mentoring/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/mentoring_env && \
+        curl -L -o mentoring/src/config.json https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/mentoring_config.json && \
         curl -L -o user/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/user_env && \
         curl -L -o notification/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/notification_env && \
         curl -L -o interface-service/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/interface_env && \
         curl -L -o scheduler/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/scheduler_env && \
+        curl -L -o chat-communications/src/.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/chat_communications_env && \
         curl -L -o mentoring-mobile-app/src/environments/environment.ts https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/environment.ts
         ```
 
@@ -266,14 +301,16 @@ Before setting up the application, the dependencies should be installed and veri
 
         ```
         curl -L -o mentoring\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/mentoring_env & ^
+        curl -L -o mentoring\src\config.json https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/mentoring_config.json & ^
         curl -L -o user\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/user_env & ^
         curl -L -o notification\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/non-citus/notification_env & ^
         curl -L -o interface-service\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/interface_env & ^
         curl -L -o scheduler\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/scheduler_env & ^
+        curl -L -o chat-communications\src\.env https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/chat_communications_env & ^
         curl -L -o mentoring-mobile-app\src\environments\environment.ts https://github.com/ELEVATE-Project/mentoring/raw/release_3.2.0/documentation/3.2.0/native/envs/environment.ts
         ```
 
-    > **Note:** Modify the environment files as necessary for your deployment using any text editor, ensuring that the values are appropriate for your environment. The default values provided in the current files are functional and serve as a good starting point. Refer to the sample env files provided at the [Mentoring](https://github.com/ELEVATE-Project/mentoring/blob/release_3.2.0/src/.env.sample), [User](https://github.com/ELEVATE-Project/user/blob/release_3.2.0/src/.env.sample), [Notification](https://github.com/ELEVATE-Project/notification/blob/release_3.2.0/src/.env.sample), [Scheduler](https://github.com/ELEVATE-Project/scheduler/blob/release_3.2.0/src/.env.sample), and [Interface](https://github.com/ELEVATE-Project/interface-service/blob/main/src/.env.sample) repositories for reference.
+    > **Note:** Modify the environment files as necessary for your deployment using any text editor, ensuring that the values are appropriate for your environment. The default values provided in the current files are functional and serve as a good starting point. Refer to the sample env files provided at the [Mentoring](https://github.com/ELEVATE-Project/mentoring/blob/release_3.2.0/src/.env.sample), [User](https://github.com/ELEVATE-Project/user/blob/release-3.2.0/src/.env.sample), [Notification](https://github.com/ELEVATE-Project/notification/blob/release-3.2.0/src/.env.sample), [Scheduler](https://github.com/ELEVATE-Project/scheduler/blob/release-3.2.0/src/.env.sample), and [Interface](https://github.com/ELEVATE-Project/interface-service/blob/main/src/.env.sample) repositories for reference.
 
     > **Caution:** While the default values in the downloaded environment files enable the application to operate, certain features may not function correctly or could be impaired unless the adopter-specific environment variables are properly configured.
     >
@@ -334,7 +371,8 @@ Before setting up the application, the dependencies should be installed and veri
             ```
             cd mentoring/src && npx sequelize-cli db:migrate && cd ../.. && \
             cd user/src && npx sequelize-cli db:migrate && cd ../.. && \
-            cd notification/src && npx sequelize-cli db:migrate && cd ../..
+            cd notification/src && npx sequelize-cli db:migrate && cd ../.. && \
+            cd chat-communications/src && npx sequelize-cli db:migrate && cd ../..
             ```
 
     - **Windows**
@@ -346,7 +384,8 @@ Before setting up the application, the dependencies should be installed and veri
             ```
             cd mentoring/src & npx sequelize-cli db:migrate & cd ../.. && ^
             cd user/src & npx sequelize-cli db:migrate & cd ../.. & ^
-            cd notification/src & npx sequelize-cli db:migrate & cd ../..
+            cd notification/src & npx sequelize-cli db:migrate & cd ../.. & ^
+            cd chat-communications/src & npx sequelize-cli db:migrate & cd ../..
             ```
 
 7. **Enabling Citus And Setting Distribution Columns (Optional)**
@@ -419,7 +458,8 @@ Before setting up the application, the dependencies should be installed and veri
         cd user/src && pm2 start app.js -i 2 --name mentored-user && cd ../.. && \
         cd notification/src && pm2 start app.js -i 2 --name mentored-notification && cd ../.. && \
         cd interface-service/src && pm2 start app.js -i 2 --name mentored-interface && cd ../.. && \
-        cd scheduler/src && pm2 start app.js -i 2 --name mentored-scheduler && cd ../..
+        cd scheduler/src && pm2 start app.js -i 2 --name mentored-scheduler && cd ../.. && \
+        cd chat-communications/src && pm2 start app.js -i 2 --name mentored-communications && cd ../..
         ```
 
     - **MacOS**
@@ -429,7 +469,8 @@ Before setting up the application, the dependencies should be installed and veri
         cd user/src && npx pm2 start app.js -i 2 --name mentored-user && cd ../.. && \
         cd notification/src && npx pm2 start app.js -i 2 --name mentored-notification && cd ../.. && \
         cd interface-service/src && npx pm2 start app.js -i 2 --name mentored-interface && cd ../.. && \
-        cd scheduler/src && npx pm2 start app.js -i 2 --name mentored-scheduler && cd ../..
+        cd scheduler/src && npx pm2 start app.js -i 2 --name mentored-scheduler && cd ../.. && \
+        cd chat-communications/src && npx pm2 start app.js -i 2 --name mentored-communications && cd ../..
         ```
 
     - **Windows**
@@ -438,7 +479,8 @@ Before setting up the application, the dependencies should be installed and veri
         cd user/src && pm2 start app.js -i 2 --name mentored-user && cd ../.. && ^
         cd notification/src && pm2 start app.js -i 2 --name mentored-notification && cd ../.. && ^
         cd interface-service/src && pm2 start app.js -i 2 --name mentored-interface && cd ../.. && ^
-        cd scheduler/src && pm2 start app.js -i 2 --name mentored-scheduler && cd ../..
+        cd scheduler/src && pm2 start app.js -i 2 --name mentored-scheduler && cd ../.. && ^
+        cd chat-communications/src && pm2 start app.js -i 2 --name mentored-communications && cd ../..
         ```
 
 10. **Run Service Scripts**
@@ -450,17 +492,37 @@ Before setting up the application, the dependencies should be installed and veri
         ```
         cd user/src/scripts && node insertDefaultOrg.js && node viewsScript.js && \
         node -r module-alias/register uploadSampleCSV.js && cd ../../.. && \
-        cd mentoring/src/scripts && node psqlFunction.js && node viewsScript.js &&  node -r module-alias/register sessionUploadScript.js && cd ../../..
+        cd mentoring/src/scripts && node psqlFunction.js && node viewsScript.js &&  node -r module-alias/register sessionUploadScript.js && cd ../../.. && \
+        cd chat-communications/src/scripts && node updateRCSettings.js && cd ../../..
         ```
 
     - **Windows**
         ```
         cd user/src/scripts & node insertDefaultOrg.js & node viewsScript.js & ^
         node -r module-alias/register uploadSampleCSV.js & cd ../../.. && ^
-        cd mentoring/src/scripts & node psqlFunction.js & node viewsScript.js & node -r module-alias/register sessionUploadScript.js & cd ../../..
+        cd mentoring/src/scripts & node psqlFunction.js & node viewsScript.js &  node -r module-alias/register sessionUploadScript.js & cd ../../.. && ^
+        cd chat-communications/src/scripts & node updateRCSettings.js & cd ../../..
         ```
 
-11. **Start The Portal**
+11. **Post-Setup Configuration**
+
+    After all services are running, execute the following query against the User Service database to disable the Self-Creation Portal (SCP) feature:
+
+    - **Ubuntu/Linux/MacOS**
+
+        ```
+        psql -U postgres -d users -c "UPDATE public.organization_features SET enabled = false WHERE feature_code = 'scp';"
+        ```
+
+    - **Windows**
+
+        ```
+        psql -U postgres -d users -c "UPDATE public.organization_features SET enabled = false WHERE feature_code = 'scp';"
+        ```
+
+    > **Note:** For Linux (Citus) installations, use port `9700`: `psql -p 9700 -U postgres -d users -c "..."`
+
+12. **Start The Portal**
 
     The portal utilizes Ionic and Angular CLI for building the browser bundle, follow the steps given below to install them and start the portal.
 
@@ -577,10 +639,10 @@ Before setting up the application, the dependencies should be installed and veri
 
     Navigate to http://localhost:7601 to access the portal.
 
-## Add Required forms
-There ar few forms required for mentoting application to run, to add those fallow the below steps
+## Add Required Forms
+There are a few forms required for the mentoring application to run. To add those, follow the steps below.
 
- 1. **Download The `create_default_form_sql` and `insert_sample_forms.sh`  Script File:**
+1. **Download The `create_default_form_sql` and `insert_sample_forms.sh`  Script File:**
 
     - **Ubuntu/Linux**
 

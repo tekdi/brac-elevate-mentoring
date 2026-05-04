@@ -9,15 +9,17 @@ RATE_LIMITER_GENERAL_LIMIT=500
 RATE_LIMITER_NUMBER_OF_PROXIES=3
 RATE_LIMITER_PUBLIC_LOW_LIMIT=50
 REQUIRED_BASE_PACKAGES=elevate-user elevate-mentoring elevate-scheduler         
-REQUIRED_PACKAGES=elevate-mentoring@1.2.93
-ROUTE_CONFIG_JSON_URLS_PATHS=https://raw.githubusercontent.com/ELEVATE-Project/utils/refs/heads/master/interface-routes/elevate-routes.json
+REQUIRED_PACKAGES=elevate-user@1.1.99 elevate-mentoring@1.2.93 elevate-scheduler@1.0.4
+ROUTE_CONFIG_JSON_URLS_PATHS="https://raw.githubusercontent.com/ELEVATE-Project/mentoring/refs/heads/master/interface-routes/elevate-mentoring.json,https://raw.githubusercontent.com/ELEVATE-Project/user/master/src/constants/interface-routes/configs.json,https://raw.githubusercontent.com/ELEVATE-Project/scheduler/master/src/constants/interface-routes/configs.json"
 SCHEDULER_SERVICE_BASE_URL=http://localhost:4000
 SUPPORTED_HTTP_TYPES="GET POST PUT PATCH DELETE"
 USER_SERVICE_BASE_URL=http://localhost:3001
 ALLOWED_HOST="*"
 INTERNAL_ACCESS_TOKEN=internal_access_token
-ELEVATE_NOTIFICATION_KAFKA_BROKERS="kafka:9092"
-ELEVATE_NOTIFICATION_KAFKA_GROUP_ID="mentoringInterface"
-ELEVATE_NOTIFICATION_KAFKA_TOPIC="notification"
-SAAS_NOTIFICATION_BASE_URL="/email"
-SAAS_NOTIFICATION_SEND_EMAIL_ROUTE="/notification"
+# Kafka configuration for the elevate-mentoring package
+ELEVATE_NOTIFICATION_KAFKA_BROKERS=localhost:9092
+ELEVATE_NOTIFICATION_KAFKA_GROUP_ID=notification.mentoring.group
+ELEVATE_NOTIFICATION_KAFKA_TOPIC=develop.notifications
+# Notification service endpoints for direct API calls from interface
+SAAS_NOTIFICATION_BASE_URL=http://localhost:3002
+SAAS_NOTIFICATION_SEND_EMAIL_ROUTE=/notification/v1/email/send
