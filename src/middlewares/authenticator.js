@@ -11,6 +11,7 @@ const MenteeExtensionQueries = require('@database/queries/userExtension')
 const utils = require('@generics/utils')
 const path = require('path')
 const cacheHelper = require('@generics/cacheHelper')
+const OrganizationExtensionQueries = require('@database/queries/organisationExtension')
 
 module.exports = async function (req, res, next) {
 	try {
@@ -151,6 +152,93 @@ module.exports = async function (req, res, next) {
 			throw createUnauthorizedResponse()
 		}
 		req.decodedToken.token = authHeader
+
+		// Check for admin and tenant admin roles — allow overriding tenant/org via headers
+		const roles = req.decodedToken.roles || []
+		const isAdmin = roles.some((role) => role.title === common.ADMIN_ROLE)
+		const isTenantAdmin = roles.some((role) => role.title === common.TENANT_ADMIN_ROLE)
+
+		if (isAdmin || isTenantAdmin) {
+			const orgCodeHeaderName = common.ORG_CODE_HEADER
+			const tenantCodeHeaderName = common.TENANT_CODE_HEADER
+
+			const orgCode = (req.headers[orgCodeHeaderName] || '').trim()
+			const tenantCode = (req.headers[tenantCodeHeaderName] || '').trim()
+
+			const hasAnyOverrideHeader = orgCode || tenantCode
+
+			if (hasAnyOverrideHeader) {
+				if (isTenantAdmin && !isAdmin) {
+					const effectiveTenantCode = req.decodedToken.tenant_code
+					if (!orgCode) {
+						throw responses.failureResponse({
+							message: {
+								key: 'ORG_CODE_REQUIRED_FOR_TENANT_ADMIN',
+								interpolation: { orgCodeHeader: orgCodeHeaderName },
+							},
+							statusCode: httpStatusCode.bad_request,
+							responseCode: 'CLIENT_ERROR',
+						})
+					}
+
+					const overrideOrg = await OrganizationExtensionQueries.findOne(
+						{ organization_code: orgCode },
+						effectiveTenantCode
+					)
+
+					if (!overrideOrg) {
+						throw responses.failureResponse({
+							message: {
+								key: 'INVALID_ORG_CODE_FOR_TENANT',
+								interpolation: { orgCodeHeader: orgCodeHeaderName },
+							},
+							statusCode: httpStatusCode.bad_request,
+							responseCode: 'CLIENT_ERROR',
+						})
+					}
+
+					req.decodedToken.organization_id = overrideOrg.organization_id
+					req.decodedToken.organization_code = orgCode
+				} else if (isAdmin) {
+					if (!orgCode || !tenantCode) {
+						throw responses.failureResponse({
+							message: {
+								key: 'ADD_ORG_OR_TENANT_HEADER',
+								interpolation: {
+									orgCodeHeader: orgCodeHeaderName,
+									tenantCodeHeader: tenantCodeHeaderName,
+								},
+							},
+							statusCode: httpStatusCode.bad_request,
+							responseCode: 'CLIENT_ERROR',
+						})
+					}
+
+					const overrideOrg = await OrganizationExtensionQueries.findOne(
+						{ organization_code: orgCode },
+						tenantCode
+					)
+
+					if (!overrideOrg) {
+						throw responses.failureResponse({
+							message: {
+								key: 'INVALID_ORG_OR_TENANT_CODE',
+								interpolation: {
+									orgCodeHeader: orgCodeHeaderName,
+									tenantCodeHeader: tenantCodeHeaderName,
+								},
+							},
+							statusCode: httpStatusCode.bad_request,
+							responseCode: 'CLIENT_ERROR',
+						})
+					}
+
+					req.decodedToken.tenant_code = tenantCode
+					req.decodedToken.organization_id = overrideOrg.organization_id
+					req.decodedToken.organization_code = orgCode
+				}
+			}
+		}
 
 		if (adminHeader) {
 			if (adminHeader != process.env.ADMIN_ACCESS_TOKEN) throw createUnauthorizedResponse()
@@ -433,6 +521,7 @@ const validRoles = new Set([
 	common.ORG_ADMIN_ROLE,
 	common.ADMIN_ROLE,
 	common.SESSION_MANAGER_ROLE,
+	common.TENANT_ADMIN_ROLE,
 ])
 
 async function keycloakPublicKeyAuthentication(token) {

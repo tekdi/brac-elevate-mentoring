@@ -317,4 +317,7 @@ module.exports = {
 		ASCENDING: 'ASC',
 		DESCENDING: 'DESC',
 	},
+	TENANT_ADMIN_ROLE: 'tenant_admin',
+	ORG_CODE_HEADER: (process.env.ORG_CODE_HEADER_NAME || 'x-org-code').toLowerCase(),
+	TENANT_CODE_HEADER: (process.env.TENANT_CODE_HEADER_NAME || 'x-tenant-code').toLowerCase(),
 }
