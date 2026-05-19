@@ -46,6 +46,16 @@ let enviromentVariables = {
 		optional: true,
 		default: 'organization-id',
 	},
+	ORG_CODE_HEADER_NAME: {
+		message: 'Required organization code header name for admin org override',
+		optional: true,
+		default: 'x-org-code',
+	},
+	TENANT_CODE_HEADER_NAME: {
+		message: 'Required tenant code header name for admin tenant override',
+		optional: true,
+		default: 'x-tenant-code',
+	},
 	IS_AUTH_TOKEN_BEARER: {
 		message: 'Required specification: If auth token is bearer or not',
 		optional: true,
