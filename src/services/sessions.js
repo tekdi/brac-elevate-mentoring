@@ -2016,10 +2016,10 @@ module.exports = class SessionsHelper {
 		mentorId = null,
 		orgCode,
 		tenantCode,
-		roles
+		roles,
+		email = null
 	) {
 		try {
-			let email
 			let name
 			let userId
 			let enrollmentType
@@ -2043,7 +2043,6 @@ module.exports = class SessionsHelper {
 				enrollmentType = common.ENROLLED
 			} else {
 				userId = userTokenData.id || userTokenData.user_id
-				email = userTokenData.email
 				name = userTokenData.name
 
 				emailTemplateCode = process.env.MENTEE_SESSION_ENROLLMENT_BY_MANAGER_EMAIL_TEMPLATE // update with new template
@@ -3538,14 +3537,16 @@ module.exports = class SessionsHelper {
 			const enrollPromises = mentees.map((menteeData) =>
 				this.enroll(
 					sessionId,
-					{ user_id: menteeData.user_id, email: menteeData.email, name: menteeData.name },
+					{ user_id: menteeData.user_id, name: menteeData.name },
 					timeZone,
 					menteeData.is_mentor,
 					false,
 					sessionDetails,
 					effectiveMentorId, // mentorId
 					organizationCode,
-					tenantCode
+					tenantCode,
+					undefined,
+					menteeData.email
 				)
 					.then((response) => ({
 						id: menteeData.user_id,
