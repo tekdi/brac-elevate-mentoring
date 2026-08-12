@@ -122,7 +122,7 @@ module.exports = class SessionsHelper {
 			// If type is passed store it in upper case
 			bodyData.type && (bodyData.type = bodyData.type.toUpperCase())
 			// If session type is private and mentorId is not passed in request body return an error
-			if (bodyData.type && (!bodyData.mentor_id || bodyData.mentor_id == '')) {
+			if (bodyData.type == common.SESSION_TYPE.PRIVATE && (!bodyData.mentor_id || bodyData.mentor_id == '')) {
 				return responses.failureResponse({
 					message: 'MENTORS_NOT_FOUND',
 					statusCode: httpStatusCode.bad_request,
