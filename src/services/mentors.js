@@ -1729,11 +1729,15 @@ module.exports = class MentorsHelper {
 				filters['status'] = arrayOfStatus
 			}
 
-			// Apply custom startDate and endDate filter only if both are provided
-			if (startDate && endDate) {
+			// Apply custom startDate to get upcoming sessions after the startDate. If not passed, it will show all sessions which are completed and upcoming.
+			if (startDate) {
 				filters['start_date'] = { [Op.gte]: startDate }
+			}
+			// pass end date to see the sessions which are completed before the end date. If not passed, it will show all sessions which are completed and upcoming.
+			if (endDate) {
 				filters['end_date'] = { ...(filters['end_date'] || {}), [Op.lte]: endDate }
 			}
+
 			// Get sessions without mentor details (simple database query)
 			const sessionDetails = await sessionQueries.findAllSessions(page, limit, search, filters, tenantCode)
 
@@ -1756,11 +1760,13 @@ module.exports = class MentorsHelper {
 			//remove meeting_info details except value and platform and add is_assigned flag
 			sessionDetails.rows.forEach((item) => {
 				if (item.meeting_info) {
+					item.meeting_info_details = item.meeting_info
 					item.meeting_info = {
 						value: item.meeting_info.value,
 						platform: item.meeting_info.platform,
 					}
 				}
+
 				item.is_assigned = item.mentor_id !== item.created_by
 				// Normalize org code from enriched organization object for entity type resolution
 				item.organization_code = item.organization?.organization_code || null
