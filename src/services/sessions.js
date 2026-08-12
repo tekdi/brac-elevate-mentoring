@@ -281,6 +281,13 @@ module.exports = class SessionsHelper {
 			//validationData = utils.removeParentEntityTypes(JSON.parse(JSON.stringify(validationData)))
 			const validationData = removeDefaultOrgEntityTypes(entityTypes, defaults.orgCode)
 			bodyData.status = bodyData.status || common.PUBLISHED_STATUS
+			if (![common.DRAFT_STATUS, common.PUBLISHED_STATUS].includes(bodyData.status)) {
+				return responses.failureResponse({
+					message: 'INVALID_STATUS',
+					statusCode: httpStatusCode.bad_request,
+					responseCode: 'CLIENT_ERROR',
+				})
+			}
 			let res = utils.validateInput(bodyData, validationData, sessionModelName, skipValidation)
 			if (!res.success) {
 				return responses.failureResponse({
