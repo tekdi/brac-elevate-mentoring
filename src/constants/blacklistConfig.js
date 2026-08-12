@@ -67,7 +67,6 @@ const sessions = {
 	update: [
 		'id',
 		'session_reschedule',
-		'status',
 		'mentee_password',
 		'started_at',
 		'mentor_password',

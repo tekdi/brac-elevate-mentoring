@@ -280,7 +280,7 @@ module.exports = class SessionsHelper {
 
 			//validationData = utils.removeParentEntityTypes(JSON.parse(JSON.stringify(validationData)))
 			const validationData = removeDefaultOrgEntityTypes(entityTypes, defaults.orgCode)
-			bodyData.status = common.PUBLISHED_STATUS
+			bodyData.status = bodyData.status || common.PUBLISHED_STATUS
 			let res = utils.validateInput(bodyData, validationData, sessionModelName, skipValidation)
 			if (!res.success) {
 				return responses.failureResponse({
