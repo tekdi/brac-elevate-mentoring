@@ -21,6 +21,8 @@ const mentorService = require('@services/mentors')
 const schedulerRequest = require('@requests/scheduler')
 const communicationHelper = require('@helpers/communications')
 const cacheHelper = require('@generics/cacheHelper')
+const { body } = require('express-validator/check')
+const { get } = require('request')
 
 module.exports = class requestSessionsHelper {
 	static async checkConnectionRequestExists(userId, targetUserId, tenantCode) {
@@ -41,29 +43,62 @@ module.exports = class requestSessionsHelper {
 
 	static async create(bodyData, userId, organizationCode, organizationId, SkipValidation, tenantCode) {
 		try {
-			const mentorUserExists = await cacheHelper.mentor.get(tenantCode, bodyData.requestee_id)
-			if (!mentorUserExists) {
-				return responses.failureResponse({
-					statusCode: httpStatusCode.not_found,
-					message: 'USER_NOT_FOUND',
-				})
+			if (bodyData.requestee_id) {
+				const mentorUserExists = await cacheHelper.mentor.get(tenantCode, bodyData.requestee_id)
+				if (!mentorUserExists) {
+					return responses.failureResponse({
+						statusCode: httpStatusCode.not_found,
+						message: 'USER_NOT_FOUND',
+					})
+				}
+				bodyData['assignment_type'] = 'SPECIFIC'
 			}
 
-			// Check if a connection already exists between the users
-			const connectionExists = await connectionQueries.getConnection(userId, bodyData.requestee_id, tenantCode)
+			if (bodyData.requestees) {
+				if (Array.isArray(bodyData.requestees)) {
+					const mentorEmails = []
+					for (let i = 0; i < bodyData.requestees.length; i++) {
+						const mentorId = bodyData.requestees[i]
+						if (!isNaN(mentorId)) {
+							// Use cache (now includes email with unScoped=true)
+							let mentorData = await cacheHelper.mentor.get(tenantCode, mentorId)
+							if (!mentorData) {
+								mentorData = await cacheHelper.mentor.get(tenantCode, mentorId)
+							}
+							if (mentorData && mentorData.email) {
+								mentorEmails.push(mentorData.email)
+							}
+							// Skip missing mentee and continue processing the rest
+						} else {
+							mentorEmails.push(mentorId)
+						}
+					}
+					bodyData.mentorEmails = mentorEmails
+					bodyData['assignment_type'] = 'GROUP'
+				}
+			}
 
-			// If not connected, restrict mentee to a single pending request
-			if (!connectionExists) {
-				const pendingRequest = await sessionRequestQueries.checkPendingRequest(
+			if (bodyData.requestee_id) {
+				// Check if a connection already exists between the users
+				const connectionExists = await connectionQueries.getConnection(
 					userId,
 					bodyData.requestee_id,
 					tenantCode
 				)
-				if (pendingRequest.count > 0) {
-					return responses.failureResponse({
-						statusCode: httpStatusCode.bad_request,
-						message: 'SESSION_REQUEST_PENDING',
-					})
+
+				// If not connected, restrict mentee to a single pending request
+				if (!connectionExists) {
+					const pendingRequest = await sessionRequestQueries.checkPendingRequest(
+						userId,
+						bodyData.requestee_id,
+						tenantCode
+					)
+					if (pendingRequest.count > 0) {
+						return responses.failureResponse({
+							statusCode: httpStatusCode.bad_request,
+							message: 'SESSION_REQUEST_PENDING',
+						})
+					}
 				}
 			}
 
@@ -157,7 +192,9 @@ module.exports = class requestSessionsHelper {
 				bodyData.end_date,
 				bodyData.title,
 				bodyData.meta ? bodyData.meta : null,
-				tenantCode
+				tenantCode,
+				bodyData.assignment_type,
+				bodyData.requestees
 			)
 
 			// Schedule a job to expire the session request after end_date
@@ -353,18 +390,27 @@ module.exports = class requestSessionsHelper {
 				})
 			}
 
-			// Map session data
-			Object.assign(bodyData, {
-				type: common.SESSION_TYPE.PRIVATE,
-				mentor_id: mentorUserId,
-				mentees: [getRequestSessionDetails.requestor_id],
-				description: getRequestSessionDetails.agenda,
-				title: getRequestSessionDetails.title,
-				start_date: getRequestSessionDetails.start_date,
-				end_date: getRequestSessionDetails.end_date,
-				meta: getRequestSessionDetails.meta || null,
-				sessionCreatedByRequest: true,
-			})
+			bodyData['type'] = bodyData.type || common.SESSION_TYPE.PRIVATE
+			bodyData['mentor_id'] = mentorUserId
+
+			if (
+				process.env.IS_SESSION_REQUEST_FIELDS_EDITABLE === false ||
+				process.env.IS_SESSION_REQUEST_FIELDS_EDITABLE === 'false'
+			) {
+				// Map session data
+				Object.assign(bodyData, {
+					mentees: [getRequestSessionDetails.requestor_id],
+					description: getRequestSessionDetails.agenda,
+					title: getRequestSessionDetails.title,
+					start_date: getRequestSessionDetails.start_date,
+					end_date: getRequestSessionDetails.end_date,
+					categories: getRequestSessionDetails.meta.categories || [],
+					recommended_for: getRequestSessionDetails.meta.recommended_for || [],
+					meeting_info: getRequestSessionDetails.meta.meeting_info || null,
+					meta: getRequestSessionDetails.meta || null,
+					sessionCreatedByRequest: true,
+				})
+			}
 
 			// Create session
 			const sessionCreation = await sessionService.create(
@@ -376,20 +422,36 @@ module.exports = class requestSessionsHelper {
 				true,
 				tenantCode
 			)
-
+			console.log('sessionCreation', sessionCreation)
 			// If session creation fails
 			if (sessionCreation.statusCode !== httpStatusCode.created) {
 				return responses.failureResponse({
 					statusCode: sessionCreation.statusCode || httpStatusCode.bad_request,
 					message: sessionCreation.message || 'SESSION_CREATION_FAILED',
-					data: sessionCreation.data || [],
+					result: sessionCreation.data || [],
 				})
 			}
 
+			let requestIdtoApprove = bodyData.request_session_id
+			if (getRequestSessionDetails.assignment_type === 'GROUP') {
+				const meta = getRequestSessionDetails.meta || {}
+				meta.parentRequestId = getRequestSessionDetails.id
+				const addSessionRequest = await sessionRequestQueries.addSessionRequest(
+					getRequestSessionDetails.requestor_id,
+					mentorUserId,
+					getRequestSessionDetails.agenda,
+					getRequestSessionDetails.start_date,
+					getRequestSessionDetails.end_date,
+					getRequestSessionDetails.title,
+					meta,
+					getRequestSessionDetails.tenant_code
+				)
+				requestIdtoApprove = addSessionRequest.id
+			}
 			// Approve session request
 			const approveSessionRequest = await sessionRequestQueries.approveRequest(
 				mentorUserId,
-				bodyData.request_session_id,
+				requestIdtoApprove,
 				sessionCreation.result.id,
 				tenantCode
 			)
@@ -405,6 +467,17 @@ module.exports = class requestSessionsHelper {
 					message: 'SESSION_APPROVAL_FAILED',
 					data: [],
 				})
+			}
+
+			if (getRequestSessionDetails.assignment_type === 'GROUP') {
+				const requestees = (getRequestSessionDetails.requestees || []).filter(
+					(requesteeId) => String(requesteeId) !== String(mentorUserId)
+				)
+				const expireSessionRequest = await sessionRequestQueries.expireRequest(
+					bodyData.request_session_id,
+					tenantCode,
+					requestees
+				)
 			}
 
 			// Check if mentee user exists - try cache first
