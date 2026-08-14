@@ -1,10 +1,15 @@
 module.exports = {
 	create: (req) => {
-		req.checkBody('requestee_id')
-			.notEmpty()
-			.withMessage('requestee_id is required')
-			.isString()
-			.withMessage('requestee_id must be a string')
+		req.checkBody('requestee_id').optional().isString().withMessage('requestee_id must be a string')
+
+		req.checkBody('requestees').optional().isArray().withMessage('requestees must be an array')
+
+		req.checkBody().custom((body) => {
+			if (!body.requestee_id && (!body.requestees || body.requestees.length === 0)) {
+				throw new Error('Either requestee_id or requestees must be provided')
+			}
+			return true
+		})
 
 		req.checkBody('title')
 			.notEmpty()

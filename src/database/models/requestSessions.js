@@ -1,3 +1,5 @@
+const request = require('request')
+
 module.exports = (sequelize, DataTypes) => {
 	const RequestSession = sequelize.define(
 		'RequestSession',
@@ -14,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			requestee_id: {
 				type: DataTypes.STRING,
-				allowNull: false,
+				allowNull: true,
 			},
 			status: {
 				type: DataTypes.STRING,
@@ -67,6 +69,16 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			deleted_at: {
 				type: DataTypes.DATE,
+			},
+			assignment_type: {
+				type: DataTypes.ENUM('SPECIFIC', 'GROUP', 'PUBLIC', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
+				allowNull: false,
+				defaultValue: 'SPECIFIC',
+			},
+			requestees: {
+				type: DataTypes.ARRAY(DataTypes.STRING),
+				allowNull: true,
+				defaultValue: [],
 			},
 		},
 		{

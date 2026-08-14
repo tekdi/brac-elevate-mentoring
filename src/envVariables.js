@@ -632,6 +632,11 @@ let enviromentVariables = {
 		optional: true,
 		default: false,
 	},
+	IS_SESSION_REQUEST_FIELDS_EDITABLE: {
+		message: 'Required flag to determine if session request fields are editable',
+		optional: true,
+		default: false,
+	},
 }
 
 let success = true
@@ -718,7 +723,7 @@ module.exports = function () {
 		tableData.push(tableObj)
 	})
 
-	console.log(tableData.toString())
+	//console.log(tableData.toString())
 
 	return {
 		success: success,

@@ -1715,11 +1715,12 @@ module.exports = class MentorsHelper {
 				mentor_id: loggedInUserId,
 			}
 			if (arrayOfStatus.length > 0) {
-				// if (arrayOfStatus.includes(common.COMPLETED_STATUS) && arrayOfStatus.length == 1) {
-				// 	filters['endDateUtc'] = {
-				// 		$lt: moment().utc().format(),
-				// 	}
-				// } else
+				if (arrayOfStatus.includes(common.UPCOMING_STATUS)) {
+					filters['start_date'] = {
+						[Op.gte]: currentDate,
+					}
+				}
+
 				if (arrayOfStatus.includes(common.PUBLISHED_STATUS) && arrayOfStatus.includes(common.LIVE_STATUS)) {
 					filters['end_date'] = {
 						[Op.gte]: currentDate,
