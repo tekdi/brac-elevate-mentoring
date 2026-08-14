@@ -6,6 +6,7 @@ const common = require('@constants/common')
 const MenteeExtension = require('@database/models/index').UserExtension
 const { QueryTypes } = require('sequelize')
 const moment = require('moment')
+const { assign } = require('lodash')
 
 exports.getColumns = async () => {
 	try {
@@ -23,12 +24,25 @@ exports.getModelName = async () => {
 	}
 }
 
-exports.addSessionRequest = async (requestorId, requesteeId, Agenda, startDate, endDate, Title, Meta, tenantCode) => {
+exports.addSessionRequest = async (
+	requestorId,
+	requesteeId,
+	Agenda,
+	startDate,
+	endDate,
+	Title,
+	Meta,
+	tenantCode,
+	assignment_type,
+	requestees
+) => {
 	try {
 		const SessionRequestData = [
 			{
 				requestor_id: requestorId,
-				requestee_id: requesteeId,
+				requestee_id: requesteeId || '',
+				requestees: requestees,
+				assignment_type: assignment_type,
 				status: common.CONNECTIONS_STATUS.REQUESTED,
 				title: Title,
 				agenda: Agenda,
@@ -179,10 +193,15 @@ exports.rejectRequest = async (userId, requestSessionId, rejectReason, tenantCod
 	}
 }
 
-exports.expireRequest = async (requestSessionId, tenantCode) => {
+exports.expireRequest = async (requestSessionId, tenantCode, requestees = null) => {
 	try {
 		let updateData = {
 			status: common.CONNECTIONS_STATUS.EXPIRED,
+		}
+
+		// If caller provides an updated requestees array, persist it
+		if (Array.isArray(requestees)) {
+			updateData.requestees = requestees
 		}
 
 		return await requestSession.update(updateData, {
