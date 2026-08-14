@@ -29,7 +29,7 @@ exports.getSessionsMapping = async (userId, status, tenantCode) => {
 
 		return await requestSession.findAll({
 			where: {
-				requestee_id: userId,
+				[Op.or]: [{ requestee_id: userId }, { requestees: { [Op.contains]: [userId] } }],
 				status: statusFilter,
 				tenant_code: tenantCode,
 			},
