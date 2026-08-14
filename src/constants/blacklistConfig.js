@@ -73,7 +73,6 @@ const sessions = {
 		'share_link',
 		'completed_at',
 		'seats_remaining',
-		'seats_limit',
 		'custom_entity_text',
 		'mentor_name',
 		'created_at',

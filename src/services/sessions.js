@@ -129,6 +129,7 @@ module.exports = class SessionsHelper {
 					responseCode: 'CLIENT_ERROR',
 				})
 			}
+			bodyData.seats_remaining = bodyData.seats_limit || process.env.DEFAULT_SESSION_SEATS_LIMIT
 			bodyData.created_by = loggedInUserId
 			bodyData.updated_by = loggedInUserId
 			let menteeIdsToEnroll = bodyData.mentees ? bodyData.mentees : []
