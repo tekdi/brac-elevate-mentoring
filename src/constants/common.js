@@ -138,7 +138,7 @@ module.exports = {
 	mentorExtensionModelName: 'MentorExtension',
 	userExtensionModelName: 'UserExtension',
 	sessionModelName: 'Session',
-	entityTypeModelNames: ['Session', 'MentorExtension', 'UserExtension'],
+	entityTypeModelNames: ['Session', 'MentorExtension', 'UserExtension', 'RequestSession'],
 	notificationEndPoint: '/mentoring/v1/notifications/emailCronJob',
 	sessionCompleteEndpoint: '/mentoring/v1/sessions/completed/',
 	expireSessionRequestEndpoint: '/mentoring/v1/requestSessions/expire',

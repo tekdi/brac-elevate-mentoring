@@ -200,6 +200,16 @@ let enviromentVariables = {
 		optional: true,
 		default: 0,
 	},
+	ALLOW_SESSION_TIME_OVERLAP: {
+		message: 'Allow session time overlap',
+		optional: true,
+		default: 'NO',
+	},
+	ENFORCE_MAXIMUM_SESSION_TIME: {
+		message: 'Enforce maximum session time',
+		optional: true,
+		default: 'NO',
+	},
 	SESSION_MENTEE_LIMIT: {
 		message: 'Required session mentee limit',
 		optional: true,
