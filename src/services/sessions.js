@@ -205,29 +205,34 @@ module.exports = class SessionsHelper {
 					})
 				}
 			}
-			// Check if mentor is available for this session's time slot
-			const timeSlot = await this.isTimeSlotAvailable(
-				mentorIdToCheck,
-				bodyData.start_date,
-				bodyData.end_date,
-				tenantCode
-			)
+			// Check if mentor is available for this session's time slot.
+			// ALLOW_SESSION_TIME_OVERLAP=NO enforces this check; any other value (or unset) skips it,
+			// since a mentor profile can represent an organization where multiple people handle
+			// sessions, so overlapping session timings are expected/allowed in that case.
+			if (process.env.ALLOW_SESSION_TIME_OVERLAP === 'NO') {
+				const timeSlot = await this.isTimeSlotAvailable(
+					mentorIdToCheck,
+					bodyData.start_date,
+					bodyData.end_date,
+					tenantCode
+				)
 
-			// If time slot not available return corresponding error
-			if (timeSlot.isTimeSlotAvailable === false) {
-				let errorMessage = isSessionCreatedByManager
-					? 'SESSION_CREATION_LIMIT_EXCEDED_FOR_GIVEN_MENTOR'
-					: { key: 'INVALID_TIME_SELECTION', interpolation: { sessionName: timeSlot.sessionName } }
+				// If time slot not available return corresponding error
+				if (timeSlot.isTimeSlotAvailable === false) {
+					let errorMessage = isSessionCreatedByManager
+						? 'SESSION_CREATION_LIMIT_EXCEDED_FOR_GIVEN_MENTOR'
+						: { key: 'INVALID_TIME_SELECTION', interpolation: { sessionName: timeSlot.sessionName } }
 
-				if (bodyData.sessionCreatedByRequest) {
-					errorMessage = 'INVALID_TIME_SELECTION_FOR_GIVEN_MENTOR'
+					if (bodyData.sessionCreatedByRequest) {
+						errorMessage = 'INVALID_TIME_SELECTION_FOR_GIVEN_MENTOR'
+					}
+
+					return responses.failureResponse({
+						message: errorMessage,
+						statusCode: httpStatusCode.bad_request,
+						responseCode: 'CLIENT_ERROR',
+					})
 				}
-
-				return responses.failureResponse({
-					message: errorMessage,
-					statusCode: httpStatusCode.bad_request,
-					responseCode: 'CLIENT_ERROR',
-				})
 			}
 
 			// Calculate duration of the session
@@ -242,8 +247,7 @@ module.exports = class SessionsHelper {
 					responseCode: 'CLIENT_ERROR',
 				})
 			}
-
-			if (elapsedMinutes > 1440) {
+			if (process.env.ENFORCE_MAXIMUM_SESSION_TIME === 'YES' && elapsedMinutes > 1440) {
 				return responses.failureResponse({
 					message: 'EXCEEDED_MAXIMUM_SESSION_TIME',
 					statusCode: httpStatusCode.bad_request,
@@ -725,22 +729,27 @@ module.exports = class SessionsHelper {
 				})
 			}
 
-			const timeSlot = await this.isTimeSlotAvailable(
-				userId,
-				bodyData.start_date,
-				bodyData.end_date,
-				tenantCode,
-				sessionId
-			)
-			if (timeSlot.isTimeSlotAvailable === false) {
-				return responses.failureResponse({
-					message: {
-						key: 'INVALID_TIME_SELECTION',
-						interpolation: { sessionName: timeSlot.sessionName },
-					},
-					statusCode: httpStatusCode.bad_request,
-					responseCode: 'CLIENT_ERROR',
-				})
+			// ALLOW_SESSION_TIME_OVERLAP=NO enforces this check; any other value (or unset) skips it,
+			// since a mentor profile can represent an organization where multiple people handle
+			// sessions, so overlapping session timings are expected/allowed in that case.
+			if (process.env.ALLOW_SESSION_TIME_OVERLAP === 'NO') {
+				const timeSlot = await this.isTimeSlotAvailable(
+					userId,
+					bodyData.start_date,
+					bodyData.end_date,
+					tenantCode,
+					sessionId
+				)
+				if (timeSlot.isTimeSlotAvailable === false) {
+					return responses.failureResponse({
+						message: {
+							key: 'INVALID_TIME_SELECTION',
+							interpolation: { sessionName: timeSlot.sessionName },
+						},
+						statusCode: httpStatusCode.bad_request,
+						responseCode: 'CLIENT_ERROR',
+					})
+				}
 			}
 
 			const defaults = await getDefaults()
@@ -814,7 +823,7 @@ module.exports = class SessionsHelper {
 					})
 				}
 
-				if (elapsedMinutes > 1440) {
+				if (process.env.ENFORCE_MAXIMUM_SESSION_TIME === 'YES' && elapsedMinutes > 1440) {
 					return responses.failureResponse({
 						message: 'EXCEEDED_MAXIMUM_SESSION_TIME',
 						statusCode: httpStatusCode.bad_request,
