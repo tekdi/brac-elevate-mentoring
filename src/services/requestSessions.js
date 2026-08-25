@@ -43,6 +43,7 @@ module.exports = class requestSessionsHelper {
 
 	static async create(bodyData, userId, organizationCode, organizationId, SkipValidation, tenantCode) {
 		try {
+			bodyData['assignment_type'] = 'PUBLIC'
 			if (bodyData.requestee_id) {
 				const mentorUserExists = await cacheHelper.mentor.get(tenantCode, bodyData.requestee_id)
 				if (!mentorUserExists) {
@@ -422,7 +423,7 @@ module.exports = class requestSessionsHelper {
 				true,
 				tenantCode
 			)
-			console.log('sessionCreation', sessionCreation)
+
 			// If session creation fails
 			if (sessionCreation.statusCode !== httpStatusCode.created) {
 				return responses.failureResponse({
@@ -432,8 +433,7 @@ module.exports = class requestSessionsHelper {
 				})
 			}
 
-			let requestIdtoApprove = bodyData.request_session_id
-			if (getRequestSessionDetails.assignment_type === 'GROUP') {
+			/*if (getRequestSessionDetails.assignment_type === 'GROUP') {
 				const meta = getRequestSessionDetails.meta || {}
 				meta.parentRequestId = getRequestSessionDetails.id
 				const addSessionRequest = await sessionRequestQueries.addSessionRequest(
@@ -447,11 +447,11 @@ module.exports = class requestSessionsHelper {
 					getRequestSessionDetails.tenant_code
 				)
 				requestIdtoApprove = addSessionRequest.id
-			}
+			}*/
 			// Approve session request
 			const approveSessionRequest = await sessionRequestQueries.approveRequest(
 				mentorUserId,
-				requestIdtoApprove,
+				bodyData.request_session_id,
 				sessionCreation.result.id,
 				tenantCode
 			)
@@ -469,16 +469,16 @@ module.exports = class requestSessionsHelper {
 				})
 			}
 
-			if (getRequestSessionDetails.assignment_type === 'GROUP') {
-				const requestees = (getRequestSessionDetails.requestees || []).filter(
-					(requesteeId) => String(requesteeId) !== String(mentorUserId)
-				)
-				const expireSessionRequest = await sessionRequestQueries.expireRequest(
-					bodyData.request_session_id,
-					tenantCode,
-					requestees
-				)
-			}
+			// if (getRequestSessionDetails.assignment_type === 'GROUP') {
+			// 	const requestees = (getRequestSessionDetails.requestees || []).filter(
+			// 		(requesteeId) => String(requesteeId) !== String(mentorUserId)
+			// 	)
+			// 	const expireSessionRequest = await sessionRequestQueries.expireRequest(
+			// 		bodyData.request_session_id,
+			// 		tenantCode,
+			// 		requestees
+			// 	)
+			// }
 
 			// Check if mentee user exists - try cache first
 			let userExists = await cacheHelper.mentee.get(tenantCode, getRequestSessionDetails.requestor_id)

@@ -71,11 +71,16 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.DATE,
 			},
 			assignment_type: {
-				type: DataTypes.ENUM('SPECIFIC', 'GROUP', 'PUBLIC', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
+				type: DataTypes.ENUM('SPECIFIC', 'GROUP', 'PUBLIC'),
 				allowNull: false,
-				defaultValue: 'SPECIFIC',
+				defaultValue: 'PUBLIC',
 			},
 			requestees: {
+				type: DataTypes.ARRAY(DataTypes.STRING),
+				allowNull: true,
+				defaultValue: [],
+			},
+			rejected_requestees: {
 				type: DataTypes.ARRAY(DataTypes.STRING),
 				allowNull: true,
 				defaultValue: [],

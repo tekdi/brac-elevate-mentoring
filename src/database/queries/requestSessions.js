@@ -152,6 +152,7 @@ exports.getpendingRequests = async (userId, page, pageSize, tenantCode) => {
 exports.approveRequest = async (userId, requestSessionId, sessionId, tenantCode) => {
 	try {
 		const updateData = {
+			requestee_id: userId,
 			status: common.CONNECTIONS_STATUS.ACCEPTED,
 			session_id: sessionId,
 			updated_by: userId,
@@ -174,10 +175,31 @@ exports.approveRequest = async (userId, requestSessionId, sessionId, tenantCode)
 
 exports.rejectRequest = async (userId, requestSessionId, rejectReason, tenantCode) => {
 	try {
+		const sessionReq = await requestSession.findOne({
+			where: {
+				id: requestSessionId,
+				tenant_code: tenantCode,
+			},
+			raw: true,
+		})
+
+		if (!sessionReq) {
+			return [0, []]
+		}
+
+		const strUserId = String(userId)
+		const currentRejected = Array.isArray(sessionReq.rejected_requestees) ? sessionReq.rejected_requestees : []
+		const updatedRejected = Array.from(new Set([...currentRejected, strUserId]))
+
 		let updateData = {
-			status: common.CONNECTIONS_STATUS.REJECTED,
-			updated_by: userId,
+			updated_by: strUserId,
 			reject_reason: rejectReason ? rejectReason : null,
+			rejected_requestees: updatedRejected,
+		}
+
+		if (sessionReq.assignment_type === 'SPECIFIC') {
+			updateData.requestee_id = userId
+			updateData.status = common.CONNECTIONS_STATUS.REJECTED
 		}
 
 		return await requestSession.update(updateData, {
