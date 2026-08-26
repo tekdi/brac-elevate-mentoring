@@ -31,7 +31,6 @@ exports.getSessionsMapping = async (userId, status, tenantCode) => {
 		}
 
 		const statusConditions = []
-		console.log(statusList)
 		// Scenario A: REQUESTED status
 		// 1. PUBLIC or GROUP and status is REQUESTED and userId is not in rejected_requestees
 		// 2. SPECIFIC and status is REQUESTED and requestee_id is userId
