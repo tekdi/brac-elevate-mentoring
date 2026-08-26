@@ -235,21 +235,24 @@ module.exports = class requestSessionsHelper {
 	 * @param {number} pageSize - The number of records per page.
 	 * @returns {Promise<Object>} The list of pending session requests.
 	 */
-	static async list(userId, pageNo, pageSize, status, tenantCode) {
+	static async list(userId, pageNo, pageSize, status, tenantCode, onlyRequested = false) {
 		try {
 			// Get requests sent by me (requestor_id = userId)
 			const allRequestSession = await sessionRequestQueries.getAllRequests(userId, status, tenantCode)
 			const sessionRequestData = allRequestSession.rows
 
-			// Get requests sent to me (requestee_id = userId)
-			const sessionRequestMapping = await sessionRequestMappingQueries.getSessionsMapping(
-				userId,
-				status,
-				tenantCode
-			)
-
-			const combinedData = [...sessionRequestData, ...sessionRequestMapping]
-
+			let combinedData
+			if (!onlyRequested) {
+				// Get requests sent to me (requestee_id = userId)
+				const sessionRequestMapping = await sessionRequestMappingQueries.getSessionsMapping(
+					userId,
+					status,
+					tenantCode
+				)
+				combinedData = [...sessionRequestData, ...sessionRequestMapping]
+			} else {
+				combinedData = sessionRequestData
+			}
 			// Sort combined data by created_at in descending order (most recent first)
 			combinedData.sort((a, b) => {
 				const dateA = new Date(a.created_at)
@@ -273,76 +276,67 @@ module.exports = class requestSessionsHelper {
 				})
 			}
 
-			const oppositeUserIds = paginatedData.map((s) =>
-				s.requestor_id === userId ? s.requestee_id : s.requestor_id
-			)
+			let data
+			if (!onlyRequested) {
+				const oppositeUserIds = paginatedData.map((s) =>
+					s.requestor_id === userId ? s.requestee_id : s.requestor_id
+				)
 
-			let oppositeUserDetails = await userExtensionQueries.getUsersByUserIds(
-				oppositeUserIds,
-				{
-					attributes: ['user_id', 'image', 'name', 'experience', 'designation', 'organization_code'],
-				},
-				tenantCode
-			)
+				let oppositeUserDetails = await userExtensionQueries.getUsersByUserIds(
+					oppositeUserIds,
+					{
+						attributes: ['user_id', 'image', 'name', 'experience', 'designation', 'organization_code'],
+					},
+					tenantCode
+				)
 
-			const uniqueOrgCodes = [...new Set(oppositeUserDetails.map((u) => u.organization_code))]
-			const modelName = await userExtensionQueries.getModelName()
+				const uniqueOrgCodes = [...new Set(oppositeUserDetails.map((u) => u.organization_code))]
+				const modelName = await userExtensionQueries.getModelName()
 
-			const defaults = await getDefaults()
-			if (!defaults.orgCode)
-				return responses.failureResponse({
-					message: 'DEFAULT_ORG_CODE_NOT_SET',
-					statusCode: httpStatusCode.bad_request,
-					responseCode: 'CLIENT_ERROR',
-				})
-			if (!defaults.tenantCode)
-				return responses.failureResponse({
-					message: 'DEFAULT_TENANT_CODE_NOT_SET',
-					statusCode: httpStatusCode.bad_request,
-					responseCode: 'CLIENT_ERROR',
-				})
+				oppositeUserDetails = await entityTypeService.processEntityTypesToAddValueLabels(
+					oppositeUserDetails,
+					uniqueOrgCodes,
+					modelName,
+					'organization_code',
+					[],
+					tenantCode
+				)
 
-			oppositeUserDetails = await entityTypeService.processEntityTypesToAddValueLabels(
-				oppositeUserDetails,
-				uniqueOrgCodes,
-				modelName,
-				'organization_code',
-				[],
-				tenantCode
-			)
+				const userDetailsMap = Object.fromEntries(oppositeUserDetails.map((u) => [u.user_id, u]))
+				const userIds = oppositeUserIds.map((id) => String(id))
 
-			const userDetailsMap = Object.fromEntries(oppositeUserDetails.map((u) => [u.user_id, u]))
-			const userIds = oppositeUserIds.map((id) => String(id))
+				const userDetails = await userExtensionQueries.getUsersByUserIds(userIds, {}, tenantCode, true)
 
-			const userDetails = await userExtensionQueries.getUsersByUserIds(userIds, {}, tenantCode, true)
+				await Promise.all(
+					userDetails.map(async (u) => {
+						if (u.image) u.image = await utils.getDownloadableUrl(u.image)
+					})
+				)
 
-			await Promise.all(
-				userDetails.map(async (u) => {
-					if (u.image) u.image = await utils.getDownloadableUrl(u.image)
-				})
-			)
+				const fullMap = new Map(userDetails.map((u) => [String(u.user_id), u]))
 
-			const fullMap = new Map(userDetails.map((u) => [String(u.user_id), u]))
+				data = paginatedData
+					.map((session) => {
+						const isSent = session.requestor_id === userId
+						const oppositeUserId = isSent ? session.requestee_id : session.requestor_id
+						const user = userDetailsMap[oppositeUserId]
+						const fullUser = fullMap.get(String(oppositeUserId))
 
-			const data = paginatedData
-				.map((session) => {
-					const isSent = session.requestor_id === userId
-					const oppositeUserId = isSent ? session.requestee_id : session.requestor_id
-					const user = userDetailsMap[oppositeUserId]
-					const fullUser = fullMap.get(String(oppositeUserId))
-
-					if (user && fullUser) {
-						user.image = fullUser.image
-						return {
-							...session,
-							id: String(session.id),
-							user_details: user,
-							request_type: isSent ? 'sent' : 'received',
+						if (user && fullUser) {
+							user.image = fullUser.image
+							return {
+								...session,
+								id: String(session.id),
+								user_details: user,
+								request_type: isSent ? 'sent' : 'received',
+							}
 						}
-					}
-					return null
-				})
-				.filter(Boolean)
+						return null
+					})
+					.filter(Boolean)
+			} else {
+				data = paginatedData
+			}
 
 			return responses.successResponse({
 				statusCode: httpStatusCode.ok,
