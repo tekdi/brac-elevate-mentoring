@@ -280,7 +280,16 @@ module.exports = class requestSessionsHelper {
 			let oppositeUserDetails = await userExtensionQueries.getUsersByUserIds(
 				oppositeUserIds,
 				{
-					attributes: ['user_id', 'image', 'name', 'experience', 'designation', 'organization_code'],
+					attributes: [
+						'user_id',
+						'image',
+						'name',
+						'email',
+						'phone',
+						'experience',
+						'designation',
+						'organization_code',
+					],
 				},
 				tenantCode
 			)
