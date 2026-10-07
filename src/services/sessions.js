@@ -35,6 +35,7 @@ const mentorsService = require('./mentors')
 const { getEnrolledMentees } = require('@helpers/getEnrolledMentees')
 const responses = require('@helpers/responses')
 const path = require('path')
+const db = require('@database/models/index')
 const ProjectRootDir = path.join(__dirname, '../')
 const inviteeFileDir = ProjectRootDir + common.tempFolderForBulkUpload
 const fileUploadQueries = require('@database/queries/fileUpload')
@@ -1997,11 +1998,14 @@ module.exports = class SessionsHelper {
 					responseCode: 'CLIENT_ERROR',
 				})
 			}
+
 			// add index number to the response
-			allSessions.rows = allSessions.rows.map((data, index) => ({
-				...data,
-				index_number: index + 1 + limit * (page - 1), //To keep consistency with pagination
-			}))
+			allSessions.rows = allSessions.rows.length
+				? allSessions.rows.map((data, index) => ({
+						...data,
+						index_number: index + 1 + limit * (page - 1), //To keep consistency with pagination
+				  }))
+				: []
 
 			const result = {
 				data: allSessions.rows,
@@ -2815,7 +2819,7 @@ module.exports = class SessionsHelper {
 	 * @returns {JSON} - updated session data.
 	 */
 
-	static async completed(sessionId, isBBB, tenantCode, orgCode) {
+	static async completed(sessionId, isBBB, tenantCode, orgCode, mentees = [], callerId = null) {
 		try {
 			let isSessionCached = false
 			let sessionDetails = await cacheHelper.sessions.get(tenantCode, sessionId)
@@ -2831,6 +2835,20 @@ module.exports = class SessionsHelper {
 					statusCode: httpStatusCode.bad_request,
 					responseCode: 'CLIENT_ERROR',
 				})
+			}
+
+			// Marking attendance is limited to the session's mentor or creator
+			if (mentees.length > 0) {
+				const isPrivileged =
+					callerId &&
+					(String(sessionDetails.mentor_id) === callerId || String(sessionDetails.created_by) === callerId)
+				if (!isPrivileged) {
+					return responses.failureResponse({
+						message: 'NOT_AUTHORIZED_TO_MARK_ATTENDANCE',
+						statusCode: httpStatusCode.forbidden,
+						responseCode: 'CLIENT_ERROR',
+					})
+				}
 			}
 
 			let resourceInfo
@@ -2919,23 +2937,44 @@ module.exports = class SessionsHelper {
 				sessionDetails.started_at != null &&
 				!isBBB
 			) {
+				// Session isn't completed here, but attendance still has to be recorded
+				const attendance =
+					mentees.length > 0
+						? await sessionAttendeesQueries.markAttendedBulk(sessionId, mentees, tenantCode)
+						: []
 				return responses.successResponse({
 					statusCode: httpStatusCode.ok,
-					result: [],
+					result: attendance,
 				})
 			}
 
-			const updateResult = await sessionQueries.updateOne(
-				{
-					id: sessionId,
-				},
-				{
-					status: common.COMPLETED_STATUS,
-					completed_at: utils.utcFormat(),
-				},
-				tenantCode,
-				{ returning: false, raw: true }
-			)
+			// Attendance and completion succeed or fail together
+			let attendance = []
+			const transaction = await db.sequelize.transaction()
+			try {
+				if (mentees.length > 0) {
+					attendance = await sessionAttendeesQueries.markAttendedBulk(sessionId, mentees, tenantCode, {
+						transaction,
+					})
+				}
+				const updateResult = await sessionQueries.updateOne(
+					{
+						id: sessionId,
+					},
+					{
+						status: common.COMPLETED_STATUS,
+						completed_at: utils.utcFormat(),
+					},
+					tenantCode,
+					{ returning: false, raw: true, transaction }
+				)
+				// updateOne returns the error instead of throwing it
+				if (updateResult instanceof Error) throw updateResult
+				await transaction.commit()
+			} catch (error) {
+				await transaction.rollback()
+				throw error
+			}
 
 			try {
 				await cacheHelper.sessions.delete(tenantCode, sessionId)
@@ -2972,7 +3011,7 @@ module.exports = class SessionsHelper {
 
 			return responses.successResponse({
 				statusCode: httpStatusCode.ok,
-				result: [],
+				result: attendance,
 			})
 		} catch (error) {
 			throw error
@@ -3631,6 +3670,11 @@ module.exports = class SessionsHelper {
 					eventType: 'SESSION_MENTEES_ASSIGNED',
 					sessionId: String(sessionId),
 					mentees: successIds,
+					tenantCode: tenantCode,
+					orgCode: organizationCode,
+					mentorId: effectiveMentorId,
+					enrolledBy: enrolledBy,
+					session: sessionDetails,
 					occurredAt: new Date().toISOString(),
 				})
 			} catch (kafkaErr) {
