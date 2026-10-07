@@ -271,14 +271,26 @@ module.exports = class MenteesHelper {
 	 * @returns {JSON} - List of sessions
 	 */
 
-	static async sessions(userId, page, limit, search = '', tenantCode) {
+	static async sessions(loggedInUserId, page, limit, search = '', decodedToken, scope = '', menteeId = null) {
 		try {
+			const tenantCode = decodedToken.tenant_code
+			const roles = decodedToken.roles
+
+			// if scoppe has NOTATTENDED, ATTENDED
+			if (scope && scope.toLowerCase() === 'attended') {
+				return this.attendedSessions(menteeId, loggedInUserId, roles, page, limit, search, tenantCode)
+			}
+
+			if (scope && scope.toLowerCase() === 'missed') {
+				return this.missedSessions(menteeId, loggedInUserId, roles, page, limit, search, tenantCode)
+			}
+
 			/** Upcoming user's enrolled sessions {My sessions}*/
 			/* Fetch sessions if it is not expired or if expired then either status is live or if mentor 
 				delays in starting session then status will remain published for that particular interval so fetch that also */
 
 			/* TODO: Need to write cron job that will change the status of expired sessions from published to cancelled if not hosted by mentor */
-			const sessions = await this.getMySessions(page, limit, search, userId, null, null, tenantCode)
+			const sessions = await this.getMySessions(page, limit, search, loggedInUserId, null, null, tenantCode)
 
 			return responses.successResponse({
 				statusCode: httpStatusCode.ok,
@@ -895,6 +907,74 @@ module.exports = class MenteesHelper {
 	}
 
 	/**
+	 * Missed sessions list. Only sessions the participant did not join (joined_at is not set).
+	 * A user can always see their own list; another participant's list needs a role from
+	 * ROLES_WITH_SESSSIONATTENDEEMANGEACCESS (e.g. Linkage Champion / org_admin).
+	 * @method
+	 * @name missedSessions
+	 * @param {String} [userId] - user id whose missed sessions are requested. Defaults to the logged in user.
+	 * @param {String} loggedInUserId - logged in user id.
+	 * @param {Array} roles - logged in user roles.
+	 * @param {Number} page - page No.
+	 * @param {Number} limit - page limit.
+	 * @param {String} search - search field.
+	 * @param {String} tenantCode - tenant code.
+	 * @returns {JSON} - List of missed sessions
+	 */
+
+	static async missedSessions(userId, loggedInUserId, roles, page, limit, search = '', tenantCode) {
+		try {
+			const participantId = userId || loggedInUserId
+
+			if (String(participantId) !== String(loggedInUserId)) {
+				const allowedRoles = (process.env.ROLES_WITH_SESSSIONATTENDEEMANGEACCESS || '')
+					.split(',')
+					.map((role) => role.trim())
+					.filter(Boolean)
+				const hasAccess = (Array.isArray(roles) ? roles : []).some((role) => allowedRoles.includes(role.title))
+				if (!hasAccess) {
+					return responses.failureResponse({
+						message: 'INVALID_PERMISSION',
+						statusCode: httpStatusCode.forbidden,
+						responseCode: 'CLIENT_ERROR',
+					})
+				}
+
+				// Participant must belong to the same tenant as the logged in user
+				const participant = await menteeQueries.getMenteeExtension(
+					participantId,
+					['user_id'],
+					false,
+					tenantCode
+				)
+				if (!participant) {
+					return responses.failureResponse({
+						message: 'USER_NOT_FOUND',
+						statusCode: httpStatusCode.bad_request,
+						responseCode: 'CLIENT_ERROR',
+					})
+				}
+			}
+
+			const sessionDetails = await sessionQueries.getMissedSessions(
+				page,
+				limit,
+				search,
+				participantId,
+				tenantCode
+			)
+
+			return responses.successResponse({
+				statusCode: httpStatusCode.ok,
+				message: 'SESSION_FETCHED_SUCCESSFULLY',
+				result: { data: sessionDetails.rows, count: sessionDetails.count },
+			})
+		} catch (error) {
+			throw error
+		}
+	}
+
+	/**
 	 * Attended sessions list. Only sessions the participant actually joined (joined_at is set).
 	 * A user can always see their own list; another participant's list needs a role from
 	 * ROLES_WITH_SESSSIONATTENDEEMANGEACCESS (e.g. Linkage Champion / org_admin).
@@ -951,21 +1031,6 @@ module.exports = class MenteesHelper {
 				participantId,
 				tenantCode
 			)
-
-			if (sessionDetails.count > 0) {
-				const uniqueOrgIds = [...new Set(sessionDetails.rows.map((obj) => obj.mentor_organization_id))]
-				sessionDetails.rows = await entityTypeService.processEntityTypesToAddValueLabels(
-					sessionDetails.rows,
-					uniqueOrgIds,
-					common.sessionModelName,
-					'mentor_organization_id',
-					[],
-					tenantCode,
-					true
-				)
-				sessionDetails.rows = await this.sessionMentorDetails(sessionDetails.rows, tenantCode)
-				sessionDetails.rows = sessionDetails.rows.map((r) => ({ ...r, is_enrolled: true }))
-			}
 
 			return responses.successResponse({
 				statusCode: httpStatusCode.ok,
