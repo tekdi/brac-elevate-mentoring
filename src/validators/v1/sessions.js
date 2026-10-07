@@ -151,6 +151,20 @@ module.exports = {
 
 		req.checkBody('recordingUrl').notEmpty().withMessage('recordingUrl field is empty')
 	},
+	completed: (req) => {
+		req.checkParams('id')
+			.notEmpty()
+			.withMessage('id param is empty')
+			.isNumeric()
+			.withMessage('id param is invalid, must be an integer')
+
+		if (req.body?.mentees !== undefined) {
+			req.checkBody('mentees')
+				.isArray({ max: 500 })
+				.withMessage('mentees must be an array with at most 500 entries')
+			req.checkBody('mentees.*').isNumeric().withMessage('each mentee id must be numeric')
+		}
+	},
 	enrolledMentees: (req) => {
 		req.checkParams('id')
 			.notEmpty()

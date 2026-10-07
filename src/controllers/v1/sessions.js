@@ -263,7 +263,16 @@ module.exports = class Sessions {
 			}
 
 			const isBBB = req.query.source == common.BBB_VALUE ? true : false
-			const sessionsCompleted = await sessionService.completed(req.params.id, isBBB, tenantCode, orgCode)
+			const mentees = Array.isArray(req.body?.mentees) ? req.body.mentees.map(String) : []
+			const callerId = req.decodedToken?.id ? String(req.decodedToken.id) : null
+			const sessionsCompleted = await sessionService.completed(
+				req.params.id,
+				isBBB,
+				tenantCode,
+				orgCode,
+				mentees,
+				callerId
+			)
 
 			return sessionsCompleted
 		} catch (error) {

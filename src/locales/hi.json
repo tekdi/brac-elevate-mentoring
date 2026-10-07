@@ -13,6 +13,7 @@
 	"ENTITY_FETCHED_SUCCESSFULLY": "Entity fetched successfully",
 	"SESSION_CREATED_SUCCESSFULLY": "सत्र सफलतापूर्वक निर्धारित किया गया।",
 	"SESSION_NOT_FOUND": "कोई सत्र नहीं मिला।",
+	"NOT_AUTHORIZED_TO_MARK_ATTENDANCE": "आप इस सत्र की उपस्थिति दर्ज करने के लिए अधिकृत नहीं हैं।",
 	"SESSION_ALREADY_UPDATED": "सत्र पहले ही अपडेट हो चुका है",
 	"SESSION_UPDATED_SUCCESSFULLY": "आपका सत्र विवरण अपडेट हो चुका है।",
 	"SESSION_FETCHED_SUCCESSFULLY": "Session fetched successfully.",

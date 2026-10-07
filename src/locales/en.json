@@ -13,6 +13,7 @@
 	"ENTITY_FETCHED_SUCCESSFULLY": "Entity fetched successfully",
 	"SESSION_CREATED_SUCCESSFULLY": "Session created and shared with the community.",
 	"SESSION_NOT_FOUND": "Session not found.",
+	"NOT_AUTHORIZED_TO_MARK_ATTENDANCE": "You are not authorized to mark attendance for this session.",
 	"SESSION_ALREADY_UPDATED": "Session already updated.",
 	"SESSION_UPDATED_SUCCESSFULLY": "Your session details have been updated.",
 	"SESSION_FETCHED_SUCCESSFULLY": "Session fetched successfully.",
