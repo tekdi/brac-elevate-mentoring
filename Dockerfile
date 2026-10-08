@@ -12,9 +12,7 @@ USER node
 COPY --chown=node:node ./src/package.json ./src/package-lock.json ./
 
 # Install only production dependencies
-RUN npm ci --omit=dev && \
-    npm cache clean --force
-
+RUN npm install --legacy-peer-deps
 # Copy application source
 # .dockerignore prevents .env and node_modules from being copied
 COPY --chown=node:node ./src/ ./
