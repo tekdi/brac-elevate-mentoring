@@ -1,18 +1,26 @@
-FROM node:17
+# syntax=docker/dockerfile:1
 
-#Set working directory
-WORKDIR /var/src/
+FROM node:22-alpine AS runtime
 
-#Copy package.json file
-COPY ./src/package.json .
+# Application directory
+WORKDIR /var/src
 
-#Install node packages
-RUN npm install 
-#Copy all files 
-COPY ./src .
+# Run as non-root
+USER node
 
-#Expose the application port
+# Copy dependency manifests first for better layer caching
+COPY --chown=node:node ./src/package.json ./src/package-lock.json ./
+
+# Install only production dependencies
+RUN npm ci --omit=dev && \
+    npm cache clean --force
+
+# Copy application source
+# .dockerignore prevents .env and node_modules from being copied
+COPY --chown=node:node ./src/ ./
+
+# Application port
 EXPOSE 3000
 
-#Start the application
-CMD [ "node", "app.js" ]
+# Start application
+CMD ["node", "app.js"]
