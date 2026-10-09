@@ -8,7 +8,7 @@ COPY --chown=node:node ./src/package.json ./src/package-lock.json ./
 
 # Production deps only, deterministic install, npm cache mount
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev --legacy-peer-deps
+    npm install --legacy-peer-deps
 
 # App source (.dockerignore must exclude node_modules and .env)
 COPY --chown=node:node ./src/ ./
