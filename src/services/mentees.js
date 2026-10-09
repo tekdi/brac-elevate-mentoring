@@ -285,12 +285,14 @@ module.exports = class MenteesHelper {
 				return this.missedSessions(menteeId, loggedInUserId, roles, page, limit, search, tenantCode)
 			}
 
+			const userId = menteeId || loggedInUserId
+
 			/** Upcoming user's enrolled sessions {My sessions}*/
 			/* Fetch sessions if it is not expired or if expired then either status is live or if mentor 
 				delays in starting session then status will remain published for that particular interval so fetch that also */
 
 			/* TODO: Need to write cron job that will change the status of expired sessions from published to cancelled if not hosted by mentor */
-			const sessions = await this.getMySessions(page, limit, search, loggedInUserId, null, null, tenantCode)
+			const sessions = await this.getMySessions(page, limit, search, userId, null, null, tenantCode)
 
 			return responses.successResponse({
 				statusCode: httpStatusCode.ok,
@@ -924,9 +926,9 @@ module.exports = class MenteesHelper {
 
 	static async missedSessions(userId, loggedInUserId, roles, page, limit, search = '', tenantCode) {
 		try {
-			const participantId = userId || loggedInUserId
+			const menteeId = userId || loggedInUserId
 
-			if (String(participantId) !== String(loggedInUserId)) {
+			if (String(menteeId) !== String(loggedInUserId)) {
 				const allowedRoles = (process.env.ROLES_WITH_SESSSIONATTENDEEMANGEACCESS || '')
 					.split(',')
 					.map((role) => role.trim())
@@ -941,13 +943,8 @@ module.exports = class MenteesHelper {
 				}
 
 				// Participant must belong to the same tenant as the logged in user
-				const participant = await menteeQueries.getMenteeExtension(
-					participantId,
-					['user_id'],
-					false,
-					tenantCode
-				)
-				if (!participant) {
+				const mentee = await menteeQueries.getMenteeExtension(menteeId, ['user_id'], false, tenantCode)
+				if (!mentee) {
 					return responses.failureResponse({
 						message: 'USER_NOT_FOUND',
 						statusCode: httpStatusCode.bad_request,
@@ -956,13 +953,7 @@ module.exports = class MenteesHelper {
 				}
 			}
 
-			const sessionDetails = await sessionQueries.getMissedSessions(
-				page,
-				limit,
-				search,
-				participantId,
-				tenantCode
-			)
+			const sessionDetails = await sessionQueries.getMissedSessions(page, limit, search, menteeId, tenantCode)
 
 			return responses.successResponse({
 				statusCode: httpStatusCode.ok,
@@ -992,9 +983,9 @@ module.exports = class MenteesHelper {
 
 	static async attendedSessions(userId, loggedInUserId, roles, page, limit, search = '', tenantCode) {
 		try {
-			const participantId = userId || loggedInUserId
+			const menteeId = userId || loggedInUserId
 
-			if (String(participantId) !== String(loggedInUserId)) {
+			if (String(menteeId) !== String(loggedInUserId)) {
 				const allowedRoles = (process.env.ROLES_WITH_SESSSIONATTENDEEMANGEACCESS || '')
 					.split(',')
 					.map((role) => role.trim())
@@ -1009,13 +1000,8 @@ module.exports = class MenteesHelper {
 				}
 
 				// Participant must belong to the same tenant as the logged in user
-				const participant = await menteeQueries.getMenteeExtension(
-					participantId,
-					['user_id'],
-					false,
-					tenantCode
-				)
-				if (!participant) {
+				const mentee = await menteeQueries.getMenteeExtension(menteeId, ['user_id'], false, tenantCode)
+				if (!mentee) {
 					return responses.failureResponse({
 						message: 'USER_NOT_FOUND',
 						statusCode: httpStatusCode.bad_request,
@@ -1024,13 +1010,7 @@ module.exports = class MenteesHelper {
 				}
 			}
 
-			const sessionDetails = await sessionQueries.getAttendedSessions(
-				page,
-				limit,
-				search,
-				participantId,
-				tenantCode
-			)
+			const sessionDetails = await sessionQueries.getAttendedSessions(page, limit, search, menteeId, tenantCode)
 
 			return responses.successResponse({
 				statusCode: httpStatusCode.ok,
