@@ -1,30 +1,18 @@
 # syntax=docker/dockerfile:1
-
 FROM node:22-alpine
 
-# Application directory
 WORKDIR /var/src
 
-# Copy dependency manifests first
-# This improves Docker layer caching
-COPY ./src/package.json ./src/package-lock.json ./
+# Manifests first for layer caching
+COPY --chown=node:node ./src/package.json ./src/package-lock.json ./
 
-# Install production dependencies
-# Run this as root because /var/src is root-owned
-RUN npm install --legacy-peer-deps
-# Copy application source
-# .dockerignore prevents node_modules and .env files
-# from entering the build context
-COPY ./src/ ./
+# Production deps only, deterministic install, npm cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev --legacy-peer-deps
 
-# Ensure application files belong to the non-root user
-RUN chown -R node:node /var/src
+# App source (.dockerignore must exclude node_modules and .env)
+COPY --chown=node:node ./src/ ./
 
-# Run application as non-root
 USER node
-
-# Application port
 EXPOSE 3000
-
-# Start application
 CMD ["node", "app.js"]
